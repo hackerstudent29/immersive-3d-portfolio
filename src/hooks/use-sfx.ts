@@ -70,19 +70,39 @@ export const useSFX = () => {
   const playTyping = useCallback(() => {
     const ctx = getAudioCtx();
     if (!ctx) return;
+    
+    // Mechanical key "thud" (triangle pitch drop) - Volume increased for mobile
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
     
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(150 + Math.random() * 50, ctx.currentTime);
+    osc.type = 'triangle';
+    const pitch = 220 + Math.random() * 80;
+    osc.frequency.setValueAtTime(pitch, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.04);
     
-    gain.gain.setValueAtTime(0.05, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
     
     osc.start();
-    osc.stop(ctx.currentTime + 0.05);
+    osc.stop(ctx.currentTime + 0.04);
+
+    // Mechanical key "tick" transient (high pitch snap) - Volume increased for mobile
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1500 + Math.random() * 400, ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.015);
+    
+    gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.015);
+    
+    osc2.start();
+    osc2.stop(ctx.currentTime + 0.015);
   }, []);
 
   return { initAudio, playClick, playSwoosh, playTyping };

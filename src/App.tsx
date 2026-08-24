@@ -121,8 +121,16 @@ function Home() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [zoomTransform, setZoomTransform] = useState('');
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const parallaxRef = useRef({ x: 0, y: 0 });
+  const isSwiping = useRef(false);
+  const blockClicks = useRef(false);
   const [coding, setCoding] = useState(false);
+  const [typeState, setTypeState] = useState<{
+    line1: string;
+    line2: string;
+    line3: boolean;
+    line4: string;
+  }>({ line1: '', line2: '', line3: false, line4: '' });
   const [clock, setClock] = useState('');
   const [letterOpen, setLetterOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
@@ -246,20 +254,74 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    if (coding) {
-      let count = 0;
-      const typeInterval = window.setInterval(() => {
-        playTyping();
-        count++;
-        if (count > 20) window.clearInterval(typeInterval);
-      }, 150);
-      const timer = window.setTimeout(() => setCoding(false), 4200);
-      return () => {
-        window.clearInterval(typeInterval);
-        window.clearTimeout(timer);
-      };
+    if (!coding) {
+      setTypeState({ line1: '', line2: '', line3: false, line4: '' });
+      return;
     }
-  }, [coding, playTyping]);
+
+    let active = true;
+    const fullLine1 = '$ npm run build';
+    const fullLine2 = 'Building workspace...';
+    const fullLine4 = "That's basically what I do.";
+
+    // Typing Line 1
+    let i = 0;
+    const typeL1 = () => {
+      if (!active) return;
+      if (i < fullLine1.length) {
+        setTypeState(prev => ({ ...prev, line1: fullLine1.slice(0, i + 1) }));
+        playTyping();
+        i++;
+        setTimeout(typeL1, 60);
+      } else {
+        setTimeout(typeL2, 200);
+      }
+    };
+
+    // Typing Line 2
+    let j = 0;
+    const typeL2 = () => {
+      if (!active) return;
+      if (j < fullLine2.length) {
+        setTypeState(prev => ({ ...prev, line2: fullLine2.slice(0, j + 1) }));
+        playTyping();
+        j++;
+        setTimeout(typeL2, 40);
+      } else {
+        setTimeout(showL3, 600);
+      }
+    };
+
+    // Show Success Checkmark
+    const showL3 = () => {
+      if (!active) return;
+      setTypeState(prev => ({ ...prev, line3: true }));
+      playClick();
+      setTimeout(typeL4, 400);
+    };
+
+    // Typing Line 4
+    let k = 0;
+    const typeL4 = () => {
+      if (!active) return;
+      if (k < fullLine4.length) {
+        setTypeState(prev => ({ ...prev, line4: fullLine4.slice(0, k + 1) }));
+        playTyping();
+        k++;
+        setTimeout(typeL4, 50);
+      }
+    };
+
+    typeL1();
+
+    // Auto-close overlay after 7.2s to fit typing duration
+    const timer = window.setTimeout(() => setCoding(false), 7200);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [coding, playTyping, playClick]);
 
   useEffect(() => {
     if (!loading) {
@@ -410,7 +472,13 @@ function Home() {
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
       if (prefersReduced) return;
-      setParallax({ x: (event.clientX / window.innerWidth - .5) * 2, y: (event.clientY / window.innerHeight - .5) * 2 });
+      const x = (event.clientX / window.innerWidth - .5) * 2;
+      const y = (event.clientY / window.innerHeight - .5) * 2;
+      parallaxRef.current = { x, y };
+      if (appRef.current) {
+        appRef.current.style.setProperty('--mx', x.toString());
+        appRef.current.style.setProperty('--my', y.toString());
+      }
     };
     
     const onOrientation = (event: DeviceOrientationEvent) => {
@@ -420,7 +488,11 @@ function Home() {
         let y = (event.beta - 45) / 45; 
         x = Math.max(-1, Math.min(1, x));
         y = Math.max(-1, Math.min(1, y));
-        setParallax({ x, y });
+        parallaxRef.current = { x, y };
+        if (appRef.current) {
+          appRef.current.style.setProperty('--mx', x.toString());
+          appRef.current.style.setProperty('--my', y.toString());
+        }
       }
     };
 
@@ -451,16 +523,87 @@ function Home() {
     return () => window.removeEventListener('wheel', onWheel);
   }, [activeRoom, desktop, panel, letterOpen, phoneOpen, menuOpen, loading]);
 
+  // Swipe vertically on mobile to switch rooms & track swipe to block clicks
+  useEffect(() => {
+    if (desktop || panel || letterOpen || phoneOpen || menuOpen || loading) return;
+    
+    let startY = 0;
+    let startX = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      isSwiping.current = false;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const diffY = Math.abs(startY - e.touches[0].clientY);
+      const diffX = Math.abs(startX - e.touches[0].clientX);
+      if (diffY > 10 || diffX > 10) {
+        isSwiping.current = true;
+      }
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      const endY = e.changedTouches[0].clientY;
+      const diffY = startY - endY;
+      
+      // Swipe Up -> Go Down (diffY > 50)
+      if (diffY > 50 && activeRoom < 1) {
+        setActiveRoom(1);
+      }
+      // Swipe Down -> Go Up (diffY < -50)
+      else if (diffY < -50 && activeRoom > 0) {
+        setActiveRoom(0);
+      }
+
+      // Reset swiping flag slowly to absorb immediate tap-clicks on swipe release
+      setTimeout(() => {
+        isSwiping.current = false;
+      }, 80);
+    };
+    
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [activeRoom, desktop, panel, letterOpen, phoneOpen, menuOpen, loading]);
+
+  // Absorb ghost clicks on transition close/open events
+  useEffect(() => {
+    blockClicks.current = true;
+    const timer = setTimeout(() => {
+      blockClicks.current = false;
+    }, 380);
+    return () => clearTimeout(timer);
+  }, [desktop, panel, letterOpen, phoneOpen, activeBook, menuOpen]);
+
   const openPanel = (id: PanelId) => {
     setSelectedProject(null);
     setDesktop(false);
     setPanel(id);
     setMenuOpen(false);
+    setCoding(false);
+    setLetterOpen(false);
+    setPhoneOpen(false);
+    setActiveBook(null);
   };
 
   const handleObject = (id: string) => {
     if (loading) return;
+    if (blockClicks.current || isSwiping.current) return;
     initAudio();
+    // Close other interactive states when opening a new one
+    if (id !== 'keyboard') setCoding(false);
+    if (id !== 'bookshelf') setActiveBook(null);
+    
+    // Close fullscreen letter/phone
+    setLetterOpen(false);
+    setPhoneOpen(false);
+
     if (id === 'lamp') { 
       playClick();
       setTime(timeModes[(timeModes.findIndex((mode) => mode.id === time) + 1) % timeModes.length].id); 
@@ -470,7 +613,12 @@ function Home() {
     if (id === 'bookshelf') { playSwoosh(); setPanel('learning'); return; }
     if (id === 'chair') { playSwoosh(); setPanel('resume'); return; }
     if (id === 'window') { playSwoosh(); setPanel('environment'); return; }
-    if (id === 'keyboard') { playSwoosh(); setCoding(true); return; }
+    if (id === 'keyboard') { 
+      setTypeState({ line1: '', line2: '', line3: false, line4: '' });
+      playSwoosh(); 
+      setCoding(true); 
+      return; 
+    }
     if (id === 'computer') { 
       playSwoosh();
       if (monitorRef.current) {
@@ -479,8 +627,8 @@ function Home() {
         const cy = rect.top + rect.height / 2;
         const vx = window.innerWidth / 2;
         const vy = window.innerHeight / 2;
-        const px = parallax.x * -10;
-        const py = parallax.y * -10;
+        const px = parallaxRef.current.x * -10;
+        const py = parallaxRef.current.y * -10;
         const dx = (cx - px) - vx;
         const dy = (cy - py) - vy;
         const scale = 5.5;
@@ -499,7 +647,9 @@ function Home() {
     setMenuOpen(false);
     setLetterOpen(false);
     setPhoneOpen(false);
-    setActiveBook(false);
+    setActiveBook(null);
+    setCoding(false);
+    setTypeState({ line1: '', line2: '', line3: false, line4: '' });
   };
 
   const downloadResume = () => {
@@ -510,7 +660,7 @@ function Home() {
   };
 
   return (
-    <main ref={appRef} className="workspace-app" data-time={time} data-audio={audioPlaying ? 'playing' : 'stopped'} style={{ '--mx': parallax.x, '--my': parallax.y } as CSSProperties} data-testid="workspace-app">
+    <main ref={appRef} className="workspace-app" data-time={time} data-audio={audioPlaying ? 'playing' : 'stopped'} style={{ '--mx': 0, '--my': 0 } as CSSProperties} data-testid="workspace-app">
       
       <div className={`audio-seek-container ${audioPlaying ? 'is-visible' : ''}`} onClick={(e) => {
           if (!audioRef.current || !audioRef.current.duration) return;
@@ -556,7 +706,7 @@ function Home() {
           <div className="world-container" style={{ transform: `translateY(${-activeRoom * 100}vh)` }}>
           <section className="room-section">
             <div className="room-light-wash" />
-            <div className={`scene-parallax room-1 ${desktop ? 'zoomed-to-monitor' : ''}`} aria-hidden="true" style={desktop ? { transform: zoomTransform } : { transform: `translate(${parallax.x * -10}px, ${parallax.y * -10}px) scale(1)` }}>
+            <div className={`scene-parallax room-1 ${desktop ? 'zoomed-to-monitor' : ''}`} aria-hidden="true" style={desktop ? { transform: zoomTransform } : {}}>
           <div className="room-back" />
           <div className="ceiling-shadow" />
           <div className="sun-beam" />
@@ -674,7 +824,7 @@ function Home() {
           </section>
 
           <section className="room-section">
-            <div className="scene-parallax room-2" aria-hidden="true" style={{ transform: `translate(${parallax.x * -12}px, ${parallax.y * -12}px) scale(1)` }}>
+            <div className="scene-parallax room-2" aria-hidden="true">
               <div className="server-room-back">
                 <div className="grid-lines" />
                 
@@ -822,10 +972,41 @@ function Home() {
         </nav>
       </header>
 
-      {!desktop && !panel && <div className="status-line">ROOM 0{activeRoom + 1}</div>}
-      {!desktop && !panel && activeRoom === 0 && <div className="room-ui"><div className="room-intro" style={{ opacity: showIntro ? 1 : 0, pointerEvents: showIntro ? 'auto' : 'none', transition: 'opacity 1s ease-out' }}><div className="eyebrow">A digital workspace, inhabited</div><h1 className="hero-copy">I build digital<br />spaces <em>with a pulse.</em></h1><p className="intro-detail">A developer focused on humane tools, calm interfaces, and useful systems. Move through the room and see what is on the desk.</p><div className="explore-hint"><span className="hint-dot" /> Select an object to begin</div></div><div className="time-control modern-pill" aria-label="Lighting control">{timeModes.map(({ id, label, icon: Icon }) => <button key={id} className={`time-button ${time === id ? 'is-active' : ''}`} onClick={() => setTime(id)} aria-label={`Set ${label}`} data-testid={`button-time-${id}`}><Icon size={16} /><span className="time-label-inline">{label}</span></button>)}</div></div>}
+      {!desktop && !panel && !letterOpen && !phoneOpen && <div className="status-line">ROOM 0{activeRoom + 1}</div>}
+      {!desktop && !panel && activeRoom === 0 && !letterOpen && !phoneOpen && <div className="room-ui"><div className="room-intro" style={{ opacity: showIntro ? 1 : 0, pointerEvents: showIntro ? 'auto' : 'none', transition: 'opacity 1s ease-out' }}><div className="eyebrow">A digital workspace, inhabited</div><h1 className="hero-copy">I build digital<br />spaces <em>with a pulse.</em></h1><p className="intro-detail">A developer focused on humane tools, calm interfaces, and useful systems. Move through the room and see what is on the desk.</p><div className="explore-hint"><span className="hint-dot" /> Select an object to begin</div></div><div className="time-control modern-pill" aria-label="Lighting control">{timeModes.map(({ id, label, icon: Icon }) => <button key={id} className={`time-button ${time === id ? 'is-active' : ''}`} onClick={() => setTime(id)} aria-label={`Set ${label}`} data-testid={`button-time-${id}`}><Icon size={16} /><span className="time-label-inline">{label}</span></button>)}</div></div>}
 
-      {coding && <div className="coding-panel"><div className="coding-header"><Terminal size={14} /> BUILD / keyboard input</div><div className="coding-body">$ npm run build<br />Building workspace...<br /><span className="coding-ok"><Check size={11} /> build successful / 1.8s</span><br /><br />That&apos;s basically what I do.<span className="cursor" /></div></div>}
+      {/* Room Scroll Navigation Hint */}
+      {!desktop && !panel && !letterOpen && !phoneOpen && (
+        <button 
+          className={`room-scroll-hint ${activeRoom === 1 ? 'is-up' : 'is-down'}`} 
+          onClick={() => setActiveRoom(activeRoom === 0 ? 1 : 0)}
+          aria-label={activeRoom === 0 ? "Go to Server Room" : "Go to Main Room"}
+        >
+          <div className="scroll-hint-mouse">
+            <div className="scroll-hint-wheel" />
+          </div>
+          <span className="scroll-hint-text">
+            {activeRoom === 0 ? "Server Room" : "Main Room"}
+          </span>
+          <span className="scroll-hint-arrow">
+            {activeRoom === 0 ? "↓" : "↑"}
+          </span>
+        </button>
+      )}
+
+      {coding && (
+        <div className="coding-panel">
+          <div className="coding-header"><Terminal size={14} /> BUILD / keyboard input</div>
+          <div className="coding-body">
+            {typeState.line1}
+            {typeState.line1 && typeState.line1 !== '$ npm run build' && <span className="cursor" />}
+            {typeState.line2 && <><br />{typeState.line2}</>}
+            {typeState.line2 && typeState.line2 !== 'Building workspace...' && <span className="cursor" />}
+            {typeState.line3 && <><br /><span className="coding-ok"><Check size={11} /> build successful / 1.8s</span></>}
+            {typeState.line4 && <><br /><br />{typeState.line4}<span className="cursor" /></>}
+          </div>
+        </div>
+      )}
       
       {/* 2D Fullscreen Overlays (Perfectly crisp, no 3D lag) */}
       {desktop && <Desktop selectedProject={selectedProject} setSelectedProject={setSelectedProject} closeDesktop={closeEverything} />}
@@ -867,8 +1048,51 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
     }
   }, [selectedProject, setSelectedProject]);
 
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchEndX = useRef(0);
+  const touchEndY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchStartY.current = e.targetTouches[0].clientY;
+    touchEndX.current = e.targetTouches[0].clientX;
+    touchEndY.current = e.targetTouches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+    touchEndY.current = e.targetTouches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    const diffX = touchStartX.current - touchEndX.current;
+    const diffY = touchStartY.current - touchEndY.current;
+    
+    // Check if horizontal movement is greater than vertical movement
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+      if (!selectedProject) return;
+      const currentIndex = projects.findIndex(p => p.id === selectedProject.id);
+      
+      // Swipe Left -> Next Project (diffX > 40)
+      if (diffX > 40 && currentIndex < projects.length - 1) {
+        setSelectedProject(projects[currentIndex + 1]);
+      }
+      // Swipe Right -> Previous Project (diffX < -40)
+      if (diffX < -40 && currentIndex > 0) {
+        setSelectedProject(projects[currentIndex - 1]);
+      }
+    }
+  };
+
   return (
-    <section className="mac-desktop" aria-label="Mac OS Desktop">
+    <section 
+      className="mac-desktop" 
+      aria-label="Mac OS Desktop"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="mac-wallpaper" />
       
       <div className="mac-menu-bar" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: '24px', padding: '0 16px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.2)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', fontSize: '13px', zIndex: 10 }}>
@@ -919,8 +1143,30 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
         
         <div className="mac-browser-toolbar">
           <div className="mac-browser-nav">
-            <ArrowLeft size={14} className="nav-icon" />
-            <ArrowRight size={14} className="nav-icon disabled" />
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!selectedProject) return;
+                const idx = projects.findIndex(p => p.id === selectedProject.id);
+                if (idx > 0) setSelectedProject(projects[idx - 1]);
+              }}
+              disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0}
+              style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <ArrowLeft size={14} className={`nav-icon ${(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0) ? 'disabled' : ''}`} />
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!selectedProject) return;
+                const idx = projects.findIndex(p => p.id === selectedProject.id);
+                if (idx < projects.length - 1) setSelectedProject(projects[idx + 1]);
+              }}
+              disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1}
+              style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <ArrowRight size={14} className={`nav-icon ${(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1) ? 'disabled' : ''}`} />
+            </button>
           </div>
           <div className="mac-browser-address">
             <Lock size={10} className="lock-icon" />
@@ -933,44 +1179,126 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
           </div>
         </div>
 
-        {selectedProject && (
-          <main className="project-tab-content" style={{ '--project-accent': selectedProject.accent } as CSSProperties} key={selectedProject.id}>
-            <div className="content-wrapper">
-              <div className="project-hero">
-                <h2>{selectedProject.name}</h2>
-                <div className="project-category">{selectedProject.category}</div>
-                <p className="project-description">{selectedProject.description}</p>
-                <div className="project-visual" aria-label={`${selectedProject.name} interface preview`} />
-                <div className="panel-actions">
-                  <a className="link-button" href={selectedProject.github} target="_blank" rel="noreferrer">
-                    <Github size={14} /> GitHub
-                  </a>
-                  <a className="link-button" href={selectedProject.demo} target="_blank" rel="noreferrer">
-                    <ExternalLink size={14} /> Live view
-                  </a>
+        <div className="project-slider-viewport" style={{ overflow: 'hidden', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div 
+            className="project-slider-track" 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'row',
+              width: `${projects.length * 100}%`,
+              transform: `translateX(-${selectedProject ? projects.findIndex(p => p.id === selectedProject.id) * (100 / projects.length) : 0}%)`,
+              transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+              height: '100%'
+            }}
+          >
+            {projects.map((project) => (
+              <main 
+                key={project.id}
+                className="project-tab-content" 
+                style={{ 
+                  '--project-accent': project.accent,
+                  width: `${100 / projects.length}%`,
+                  flexShrink: 0,
+                  height: '100%',
+                  overflowY: 'auto'
+                } as CSSProperties}
+              >
+                <div className="content-wrapper">
+                  <div className="project-hero">
+                    <h2>{project.name}</h2>
+                    <div className="project-category">{project.category}</div>
+                    <p className="project-description">{project.description}</p>
+                    <div className="project-visual" aria-label={`${project.name} interface preview`} />
+                    <div className="panel-actions">
+                      <a className="link-button" href={project.github} target="_blank" rel="noreferrer">
+                        <Github size={14} /> GitHub
+                      </a>
+                      <a className="link-button" href={project.demo} target="_blank" rel="noreferrer">
+                        <ExternalLink size={14} /> Live view
+                      </a>
+                    </div>
+                  </div>
+                  <aside className="project-side">
+                    <div className="side-label">Built with</div>
+                    <div className="tag-list">
+                      {project.technologies.map((tech) => (
+                        <span className="tag" key={tech}>{tech}</span>
+                      ))}
+                    </div>
+                    <div className="panel-rule" />
+                    <div className="side-label">What matters here</div>
+                    <ul className="feature-list">
+                      {project.features.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
+                    <div className="panel-rule" />
+                    <div className="side-label">Status</div>
+                    <div className="side-value">A living project, shaped by real use.</div>
+                  </aside>
                 </div>
-              </div>
-              <aside className="project-side">
-                <div className="side-label">Built with</div>
-                <div className="tag-list">
-                  {selectedProject.technologies.map((tech) => (
-                    <span className="tag" key={tech}>{tech}</span>
-                  ))}
-                </div>
-                <div className="panel-rule" />
-                <div className="side-label">What matters here</div>
-                <ul className="feature-list">
-                  {selectedProject.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <div className="panel-rule" />
-                <div className="side-label">Status</div>
-                <div className="side-value">A living project, shaped by real use.</div>
-              </aside>
-            </div>
-          </main>
-        )}
+              </main>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* iOS Safari Style Bottom Bar (Only visible on mobile) */}
+      <div 
+        className="ios-safari-bar" 
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
+        <button 
+          className="ios-nav-btn" 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!selectedProject) return;
+            const idx = projects.findIndex(p => p.id === selectedProject.id);
+            if (idx > 0) setSelectedProject(projects[idx - 1]);
+          }} 
+          disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        
+        <div className="ios-address-capsule">
+          <Lock size={12} className="ios-lock-icon" />
+          <span className="ios-address-text">ram.dev/{selectedProject?.id || ''}</span>
+        </div>
+
+        <button 
+          className="ios-nav-btn" 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!selectedProject) return;
+            const idx = projects.findIndex(p => p.id === selectedProject.id);
+            if (idx < projects.length - 1) setSelectedProject(projects[idx + 1]);
+          }} 
+          disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1}
+        >
+          <ArrowRight size={18} />
+        </button>
+
+        <button className="ios-done-btn" onClick={(e) => { e.stopPropagation(); closeDesktop(); }}>
+          Done
+        </button>
+      </div>
+
+      <div 
+        className="ios-page-dots" 
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
+        {projects.map((p) => (
+          <span 
+            key={p.id} 
+            className={`ios-dot ${selectedProject?.id === p.id ? 'is-active' : ''}`} 
+            onClick={(e) => { e.stopPropagation(); setSelectedProject(p); }} 
+          />
+        ))}
       </div>
 
       <div className="mac-dock">
