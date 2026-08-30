@@ -33,7 +33,7 @@ export const projects: Project[] = [
     technologies: ['Python', 'FastAPI', 'Pinecone', 'Gemini 2.0 Flash', 'Anthropic', 'Next.js'],
     features: ['Hybrid semantic + BM25 retrieval', 'Sub-5K tokens per query', 'Weekly analytics digest', 'Cross-encoder re-ranking'],
     github: 'https://github.com/hackerstudent29/MSAJCE-LORIN',
-    demo: 'https://lorin-msajce.vercel.app/',
+    demo: 'https://lorin-ai.vercel.app/',
     accent: '#d8aa70'
   },
   {
