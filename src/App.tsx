@@ -20,11 +20,14 @@ import {
   Share,
   SunMedium,
   Sunset,
-  Terminal,
   Volume2,
   X,
+  Plus,
+  RotateCw,
 } from 'lucide-react';
 import { useSFX } from './hooks/use-sfx';
+import MacOSDock from './components/ui/mac-os-dock';
+import { Safari } from './components/ui/safari';
 
 const Github = (props: any) => (
   <svg
@@ -123,6 +126,7 @@ function Home() {
   const [activeBook, setActiveBook] = useState<{ x: number, y: number, w: number, h: number, color: string } | null>(null);
   const [panel, setPanel] = useState<PanelId>(null);
   const [desktop, setDesktop] = useState(false);
+  const [showZenifyIframe, setShowZenifyIframe] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [zoomTransform, setZoomTransform] = useState('');
@@ -969,18 +973,22 @@ function Home() {
       </div>
     </div>
 
-      <header className="topbar">
-        <button className="brand" onClick={closeEverything} aria-label="Return to room" data-testid="button-room-home"><span className="brand-mark">R/</span><span><span className="brand-name">Ram Dev</span><span className="brand-sub"> / Developer workspace</span></span></button>
-        <button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation" data-testid="button-toggle-navigation"><Menu size={18} /></button>
-        <nav className={`fallback-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Portfolio navigation">
-          {audioPlaying && (
-            <a href="https://listenzenify.vercel.app/" target="_blank" rel="noopener noreferrer" className="nav-button" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f0ca93', textDecoration: 'none', borderRight: '1px solid rgba(238,215,177,.15)', paddingRight: '12px', marginRight: '6px' }}>
-              Listen on Zenify <ExternalLink size={10} />
-            </a>
-          )}
-          {(['about', 'projects', 'skills', 'resume', 'contact'] as const).map((item) => <button className={`nav-button ${item === 'projects' && desktop ? 'is-active' : ''}`} key={item} onClick={() => item === 'projects' ? (setDesktop(true), setPanel(null), setMenuOpen(false)) : openPanel(item === 'about' ? 'about' : item === 'skills' ? 'skills' : item === 'resume' ? 'resume' : 'contact')} data-testid={`nav-${item}`}>{item}</button>)}
-        </nav>
-      </header>
+      {!desktop && (
+        <header className="topbar">
+          <button className="brand" onClick={closeEverything} aria-label="Return to room" data-testid="button-room-home"><span className="brand-mark">R/</span><span><span className="brand-name">Ram Dev</span><span className="brand-sub"> / Developer workspace</span></span></button>
+          <button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation" data-testid="button-toggle-navigation"><Menu size={18} /></button>
+          <nav className={`fallback-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Portfolio navigation">
+            <button 
+              className={`nav-button ${showZenifyIframe && desktop ? 'is-active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f0ca93', borderRight: '1px solid rgba(238,215,177,.15)', paddingRight: '12px', marginRight: '6px', cursor: 'pointer' }}
+              onClick={() => { setDesktop(true); setPanel(null); setMenuOpen(false); setShowZenifyIframe(true); }}
+            >
+              <img src="https://listenzenify.vercel.app/favicon_z_512.png?v=5" alt="Zenify" style={{ width: '16px', height: '16px', borderRadius: '4px' }} /> Zenify
+            </button>
+            {(['about', 'projects', 'skills', 'resume', 'contact'] as const).map((item) => <button className={`nav-button ${item === 'projects' && desktop && !showZenifyIframe ? 'is-active' : ''}`} key={item} onClick={() => item === 'projects' ? (setDesktop(true), setPanel(null), setMenuOpen(false), setShowZenifyIframe(false)) : openPanel(item === 'about' ? 'about' : item === 'skills' ? 'skills' : item === 'resume' ? 'resume' : 'contact')} data-testid={`nav-${item}`}>{item}</button>)}
+          </nav>
+        </header>
+      )}
 
       {!desktop && !panel && !letterOpen && !phoneOpen && <div className="status-line">ROOM 0{activeRoom + 1}</div>}
       {!desktop && !panel && activeRoom === 0 && !letterOpen && !phoneOpen && <div className="room-ui"><div className="room-intro" style={{ opacity: showIntro ? 1 : 0, pointerEvents: showIntro ? 'auto' : 'none', transition: 'opacity 1s ease-out' }}><div className="eyebrow">A digital workspace, inhabited</div><h1 className="hero-copy">I build digital<br />spaces <em>with a pulse.</em></h1><p className="intro-detail">A developer focused on humane tools, calm interfaces, and useful systems. Move through the room and see what is on the desk.</p><div className="explore-hint"><span className="hint-dot" /> Select an object to begin</div></div><div className="time-control modern-pill" aria-label="Lighting control">{timeModes.map(({ id, label, icon: Icon }) => <button key={id} className={`time-button ${time === id ? 'is-active' : ''}`} onClick={() => setTime(id)} aria-label={`Set ${label}`} data-testid={`button-time-${id}`}><Icon size={16} /><span className="time-label-inline">{label}</span></button>)}</div></div>}
@@ -1019,7 +1027,7 @@ function Home() {
       )}
       
       {/* 2D Fullscreen Overlays (Perfectly crisp, no 3D lag) */}
-      {desktop && <Desktop selectedProject={selectedProject} setSelectedProject={setSelectedProject} closeDesktop={closeEverything} />}
+      {desktop && <Desktop selectedProject={selectedProject} setSelectedProject={setSelectedProject} closeDesktop={closeEverything} showZenifyIframe={showZenifyIframe} setShowZenifyIframe={setShowZenifyIframe} />}
       {panel && <Panel panel={panel} close={closeEverything} downloadResume={downloadResume} />}
       
       {activeBook && (
@@ -1032,7 +1040,7 @@ function Home() {
                 <p className="book-author">by Ramanathan</p>
                 <div className="page-content">
                   <p>Life is not measured by the number of breaths we take, but by the moments that take our breath away. Finding purpose requires us to step out of our comfort zone and embrace the unknown.</p>
-                  <p>In work and in passion, the key to lasting fulfillment is not perfection, but persistent curiosity. Every setback is simply a setup for a greater comeback. The tools we build and the systems we create are extensions of our desire to make sense of the world.</p>
+                  <p>In work and in passion, the key to lasting fulfillment is not perfection, but persistent curiosity. Every setback is simply a setup for a greater comeback.</p>
                 </div>
               </div>
               <div className="book-page right-page">
@@ -1050,13 +1058,36 @@ function Home() {
   );
 }
 
-function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { selectedProject: Project | null; setSelectedProject: (project: Project | null) => void; closeDesktop: () => void }) {
+function Desktop({ selectedProject, setSelectedProject, closeDesktop, showZenifyIframe, setShowZenifyIframe }: { selectedProject: Project | null; setSelectedProject: (project: Project | null) => void; closeDesktop: () => void; showZenifyIframe: boolean; setShowZenifyIframe: (v: boolean) => void }) {
   // If no project is selected initially, select the first one
   useEffect(() => {
     if (!selectedProject && projects.length > 0) {
       setSelectedProject(projects[0]);
     }
   }, [selectedProject, setSelectedProject]);
+
+  const [openApps, setOpenApps] = useState<string[]>(['zenify']);
+
+  const handleAppClick = (appId: string) => {
+    if (appId === 'zenify') {
+      setShowZenifyIframe(true);
+    }
+    if (appId === 'safari') {
+      setShowZenifyIframe(false);
+    }
+    setOpenApps(prev => 
+      prev.includes(appId) 
+        ? prev.filter(id => id !== appId)
+        : [...prev, appId]
+    );
+  };
+
+  const dockApps = [
+    { id: 'safari', name: 'Browser', icon: 'https://cdn.jim-nielsen.com/macos/1024/safari-2021-06-02.png?rf=1024' },
+    { id: 'games', name: 'Games', icon: 'https://cdn.jim-nielsen.com/macos/1024/finder-2021-09-10.png?rf=1024' },
+    { id: 'things', name: 'Things', icon: 'https://cdn.jim-nielsen.com/macos/1024/notes-2021-05-25.png?rf=1024' },
+    { id: 'zenify', name: 'Zenify Website', icon: 'https://listenzenify.vercel.app/favicon_z_512.png?v=5' }
+  ];
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -1103,7 +1134,7 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="mac-wallpaper" />
+      {/* Wallpaper removed for full screen browser */}
       
       <div className="mac-menu-bar" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: '24px', padding: '0 16px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.2)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', fontSize: '13px', zIndex: 10 }}>
         <div className="mac-menu-left" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px' }}>
@@ -1125,130 +1156,127 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
         </div>
       </div>
 
-      <div className="mac-browser-window">
-        <div className="mac-browser-titlebar">
-          <div className="mac-window-buttons">
-            <button className="mac-btn close" onClick={closeDesktop} aria-label="Close"></button>
-            <button className="mac-btn min" aria-label="Minimize"></button>
-            <button className="mac-btn max" aria-label="Maximize"></button>
-          </div>
-          <div className="mac-browser-tabs">
-            {projects.map((project) => {
-              const isActive = selectedProject?.id === project.id;
-              return (
-                <div 
-                  key={project.id}
-                  className={`mac-browser-tab ${isActive ? 'is-active' : ''}`}
-                  onClick={() => setSelectedProject(project)}
-                >
-                  <span className="mac-tab-icon">{project.monogram}</span>
-                  <span className="mac-tab-title">{project.name}</span>
-                  {isActive && <span className="mac-tab-close">×</span>}
-                </div>
-              );
-            })}
-            <div className="mac-tab-new">+</div>
-          </div>
-        </div>
-        
-        <div className="mac-browser-toolbar">
-          <div className="mac-browser-nav">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!selectedProject) return;
-                const idx = projects.findIndex(p => p.id === selectedProject.id);
-                if (idx > 0) setSelectedProject(projects[idx - 1]);
-              }}
-              disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0}
-              style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <ArrowLeft size={14} className={`nav-icon ${(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0) ? 'disabled' : ''}`} />
-            </button>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!selectedProject) return;
-                const idx = projects.findIndex(p => p.id === selectedProject.id);
-                if (idx < projects.length - 1) setSelectedProject(projects[idx + 1]);
-              }}
-              disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1}
-              style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <ArrowRight size={14} className={`nav-icon ${(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1) ? 'disabled' : ''}`} />
-            </button>
-          </div>
-          <div className="mac-browser-address">
-            <Lock size={10} className="lock-icon" />
-            <span>ram.dev</span>
-            <span className="address-path">/projects/{selectedProject?.id || ''}</span>
-          </div>
-          <div className="mac-browser-actions">
-            <Share size={14} className="nav-icon" />
-            <Layers3 size={14} className="nav-icon" />
-          </div>
-        </div>
-
-        <div className="project-slider-viewport" style={{ overflow: 'hidden', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div 
-            className="project-slider-track" 
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'row',
-              width: `${projects.length * 100}%`,
-              transform: `translateX(-${selectedProject ? projects.findIndex(p => p.id === selectedProject.id) * (100 / projects.length) : 0}%)`,
-              transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-              height: '100%'
-            }}
-          >
-            {projects.map((project) => (
-              <main 
-                key={project.id}
-                className="project-tab-content" 
-                style={{ 
-                  '--project-accent': project.accent,
-                  width: `${100 / projects.length}%`,
-                  flexShrink: 0,
-                  height: '100%',
-                  overflowY: 'auto'
-                } as CSSProperties}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', padding: '0', boxSizing: 'border-box', background: '#000' }}>
+        <div className="safari-magic-wrapper">
+          <div className="safari-magic-header">
+            <div className="safari-magic-dots">
+              <span className="dot red" onClick={closeDesktop} style={{ cursor: 'pointer' }}></span>
+              <span className="dot yellow"></span>
+              <span className="dot green"></span>
+            </div>
+            
+            <div className="safari-magic-nav">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (showZenifyIframe) {
+                    setShowZenifyIframe(false);
+                    return;
+                  }
+                  if (!selectedProject) return;
+                  const idx = projects.findIndex(p => p.id === selectedProject.id);
+                  if (idx > 0) setSelectedProject(projects[idx - 1]);
+                }}
+                disabled={(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0) && !showZenifyIframe}
               >
-                <div className="content-wrapper">
-                  <div className="project-hero">
-                    <h2>{project.name}</h2>
-                    <div className="project-category">{project.category}</div>
-                    <p className="project-description">{project.description}</p>
-                    <div className="project-visual" aria-label={`${project.name} interface preview`} />
-                    <div className="panel-actions">
-                      <a className="link-button" href={project.github} target="_blank" rel="noreferrer">
-                        <Github size={14} /> GitHub
-                      </a>
-                      <a className="link-button" href={project.demo} target="_blank" rel="noreferrer">
-                        <ExternalLink size={14} /> Live view
-                      </a>
-                    </div>
-                  </div>
-                  <aside className="project-side">
-                    <div className="side-label">Built with</div>
-                    <div className="tag-list">
-                      {project.technologies.map((tech) => (
-                        <span className="tag" key={tech}>{tech}</span>
-                      ))}
-                    </div>
-                    <div className="panel-rule" />
-                    <div className="side-label">What matters here</div>
-                    <ul className="feature-list">
-                      {project.features.map((feature) => (
-                        <li key={feature}>{feature}</li>
-                      ))}
-                    </ul>
-                    <div className="panel-rule" />
-                    <div className="side-label">Status</div>
-                    <div className="side-value">A living project, shaped by real use.</div>
-                  </aside>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (showZenifyIframe) return; // Cannot go forward from Zenify currently
+                  if (!selectedProject) return;
+                  const idx = projects.findIndex(p => p.id === selectedProject.id);
+                  if (idx < projects.length - 1) setSelectedProject(projects[idx + 1]);
+                }}
+                disabled={showZenifyIframe || (!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+            
+            <div className="safari-magic-url">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>{showZenifyIframe ? 'listenzenify.vercel.app' : `ram.dev/projects/${selectedProject?.id || ''}`}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </div>
+            <div className="safari-magic-actions">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>
+            </div>
+          </div>
+          <div className="safari-magic-content">
+            {showZenifyIframe ? (
+              <iframe 
+                src="https://listenzenify.vercel.app/" 
+                style={{ width: '100%', height: '100%', border: 'none', background: '#fff' }} 
+                title="Zenify Website"
+              />
+            ) : (
+              <div className="project-slider-viewport" style={{ overflow: 'hidden', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
+                <div 
+                  className="project-slider-track" 
+                  style={{ 
+                    display: 'flex', 
+                    flexDirection: 'row',
+                    width: `${projects.length * 100}%`,
+                    transform: `translateX(-${selectedProject ? projects.findIndex(p => p.id === selectedProject.id) * (100 / projects.length) : 0}%)`,
+                    transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                    height: '100%'
+                  }}
+                >
+                  {projects.map((project) => (
+                    <main 
+                      key={project.id}
+                      className="project-tab-content" 
+                      style={{ 
+                        '--project-accent': project.accent,
+                        width: `${100 / projects.length}%`,
+                        flexShrink: 0,
+                        height: '100%',
+                        overflowY: 'auto'
+                      } as CSSProperties}
+                    >
+                      <div className="content-wrapper">
+                        <div className="project-hero">
+                          <h2>{project.name}</h2>
+                          <div className="project-category">{project.category}</div>
+                          <p className="project-description">{project.description}</p>
+                          <div className="project-visual" aria-label={`${project.name} interface preview`} />
+                          <div className="panel-actions">
+                            <a className="link-button" href={project.github} target="_blank" rel="noreferrer">
+                              <Github size={14} /> GitHub
+                            </a>
+                            <a className="link-button" href={project.demo} target="_blank" rel="noreferrer">
+                              <ExternalLink size={14} /> Live view
+                            </a>
+                          </div>
+                        </div>
+                        <aside className="project-side">
+                          <div className="side-label">Built with</div>
+                          <div className="tag-list">
+                            {project.technologies.map((tech) => (
+                              <span className="tag" key={tech}>{tech}</span>
+                            ))}
+                          </div>
+                          <div className="panel-rule" />
+                          <div className="side-label">What matters here</div>
+                          <ul className="feature-list">
+                            {project.features.map((feature) => (
+                              <li key={feature}>{feature}</li>
+                            ))}
+                          </ul>
+                          <div className="panel-rule" />
+                          <div className="side-label">Status</div>
+                          <div className="side-value">A living project, shaped by real use.</div>
+                        </aside>
+                      </div>
+                    </main>
+                  ))}
                 </div>
-              </main>
-            ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1296,8 +1324,7 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
         </button>
       </div>
 
-      <div 
-        className="ios-page-dots" 
+      <div className="ios-page-dots" 
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
@@ -1311,16 +1338,10 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop }: { select
         ))}
       </div>
 
-      <div className="mac-dock">
-         <div className="mac-dock-icon safari is-open" aria-label="Safari">
-            <div className="safari-compass"></div>
-         </div>
-         <div className="mac-dock-icon terminal" aria-label="Terminal">
-            <Terminal size={22} color="#fff" />
-         </div>
-         <div className="mac-dock-icon mail" aria-label="Mail">
-            <Mail size={22} color="#fff" />
-         </div>
+      <div className="mac-dock-container" style={{ position: 'absolute', bottom: '20px', left: '0', right: '0', display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ pointerEvents: 'auto' }}>
+          <MacOSDock apps={dockApps} onAppClick={handleAppClick} openApps={openApps} />
+        </div>
       </div>
     </section>
   );

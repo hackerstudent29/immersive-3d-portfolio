@@ -695,35 +695,23 @@
 .audio-seek-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.1); cursor: pointer; z-index: 1000; opacity: 0; transition: opacity 0.5s, height 0.2s; pointer-events: none; }
 .audio-seek-container.is-visible { opacity: 1; pointer-events: auto; }
 .audio-seek-container:hover { height: 12px; }
-.audio-seek-fill { height: 100%; background: linear-gradient(90deg, #f2ba72, #00ffcc); width: 0%; box-shadow: 0 0 10px rgba(0,255,204,0.5); pointer-events: none; }
-
-.room-light-wash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 100; mix-blend-mode: screen; transition: opacity 2s, background 2s; }
-.mac-browser-window { flex: 1; width: 100%; max-width: 100%; margin: 0; background: rgba(30, 30, 30, 0.95); border: none; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; backdrop-filter: blur(20px); animation: mac-window-slide 0.6s 1.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-.mac-browser-titlebar { display: flex; align-items: flex-end; background: rgba(45, 45, 45, 0.9); border-bottom: 1px solid rgba(0,0,0,0.5); padding-top: 12px; position: relative; }
-.mac-window-buttons { display: flex; gap: 8px; padding: 0 16px 12px 16px; position: absolute; left: 0; bottom: 0; }
-.mac-btn { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; }
-.mac-btn.close { background: #ff5f56; border: 1px solid #e0443e; }
-.mac-btn.min { background: #ffbd2e; border: 1px solid #dea123; }
-.mac-btn.max { background: #27c93f; border: 1px solid #1aab29; }
-
-.mac-browser-tabs { display: flex; margin-left: 80px; gap: 2px; overflow-x: auto; }
-.mac-browser-tab { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(20, 20, 20, 0.5); border-radius: 6px 6px 0 0; color: #999; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12px; cursor: pointer; min-width: 140px; max-width: 200px; border: 1px solid transparent; border-bottom: none; }
-.mac-browser-tab.is-active { background: rgba(60, 60, 60, 0.8); color: #fff; border-color: rgba(255,255,255,0.05); }
-.mac-tab-icon { font-family: var(--app-font-serif); font-weight: bold; background: rgba(255,255,255,0.1); width: 18px; height: 18px; display: grid; place-items: center; border-radius: 3px; font-size: 10px; }
-.mac-tab-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mac-tab-close { font-size: 14px; opacity: 0.5; }
-.mac-tab-close:hover { opacity: 1; }
-.mac-tab-new { padding: 8px 12px; color: #888; cursor: pointer; font-size: 16px; display: flex; align-items: center; }
-
-.mac-browser-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #333; border-bottom: 1px solid #111; }
-.mac-browser-nav, .mac-browser-actions { display: flex; gap: 16px; color: #ccc; }
-.nav-icon.disabled { opacity: 0.3; }
-.mac-browser-address { flex: 1; max-width: 400px; margin: 0 20px; background: #1e1e1e; border: 1px solid #111; border-radius: 6px; padding: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); }
-.address-path { color: #888; }
-.lock-icon { color: #888; }
-
-.mac-browser-content { flex: 1; overflow-y: auto; background: #1e1e1e; display: flex; flex-direction: column; }
+/* Safari Magic Full Screen Window */
+.safari-magic-wrapper { flex: 1; width: 100%; height: 100%; display: flex; flex-direction: column; background: #1e1e1e; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+.safari-magic-header { height: 52px; background: #404040; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,0.2); }
+.safari-magic-dots { display: flex; gap: 8px; width: 100px; }
+.safari-magic-dots .dot { width: 12px; height: 12px; border-radius: 50%; }
+.safari-magic-dots .dot.red { background: #ff5f56; border: 1px solid #e0443e; }
+.safari-magic-dots .dot.yellow { background: #ffbd2e; border: 1px solid #dea123; }
+.safari-magic-dots .dot.green { background: #27c93f; border: 1px solid #1aab29; }
+.safari-magic-nav { display: flex; gap: 16px; margin-right: 16px; color: #a3a3a3; }
+.safari-magic-nav button { background: none; border: none; color: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: color 0.2s; }
+.safari-magic-nav button:hover:not(:disabled) { color: #fff; }
+.safari-magic-nav button:disabled { opacity: 0.3; cursor: default; }
+.safari-magic-url { flex: 1; max-width: 660px; margin: 0 auto; height: 28px; background: #262626; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #a3a3a3; font-size: 13px; border: 1px solid rgba(0,0,0,0.1); }
+.safari-magic-url span { color: #a3a3a3; font-weight: 400; }
+.safari-magic-actions { display: flex; gap: 16px; width: 100px; justify-content: flex-end; color: #a3a3a3; }
+.safari-magic-content { flex: 1; overflow-y: auto; background: #1e1e1e; display: flex; flex-direction: column; position: relative; scrollbar-width: none; -ms-overflow-style: none; }
+.safari-magic-content::-webkit-scrollbar { display: none; }
 .content-wrapper { padding: 40px 60px; max-width: 1000px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr); gap: clamp(30px, 6vw, 80px); }
 
 .mac-dock { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 8px; display: flex; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10; animation: mac-dock-slide 0.6s 1.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -745,7 +733,7 @@
 
 .project-visual { position: relative; min-height: 240px; margin-top: 40px; overflow: hidden; background: linear-gradient(140deg, color-mix(in srgb, var(--project-accent) 42%, #263238), #1a252a 60%); border: 1px solid rgba(233,201,157,.22); }
 .project-visual::before { content: ""; position: absolute; inset: 18px; border: 1px solid rgba(239,216,185,.34); background: linear-gradient(90deg, transparent 0 16%, rgba(238,203,153,.21) 16% 17%, transparent 17% 62%, rgba(238,203,153,.19) 62% 63%, transparent 63%); }
-.project-visual::after { content: "INTERFACE / SYSTEM / HUMAN"; position: absolute; left: 18px; bottom: 14px; color: rgba(242,224,191,.63); font: 9px var(--app-font-mono); letter-spacing: .12em; }
+.project-visual::after { content: "INTERFACE / SYSTEM / HUMAN"; position: absolute; left: 24px; bottom: 24px; color: rgba(242,224,191,.63); font: 9px var(--app-font-mono); letter-spacing: .12em; z-index: 10; }
 
 .panel-actions { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; }
 
@@ -1109,7 +1097,7 @@
 .close-book-btn:hover { opacity: 1; transform: scale(1.1); }
 .book-spread { display: flex; width: 100%; height: 100%; background: #fdf6e3; border-radius: 4px 12px 12px 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 50px rgba(100,80,60,0.1); transform-style: preserve-3d; position: relative; overflow: hidden; opacity: 0; animation: fade-in-book 0.3s 0.4s forwards; }
 .book-spread::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.08) 60%, transparent); pointer-events: none; }
-.book-page { flex: 1; padding: 45px 55px; color: #332b26; position: relative; display: flex; flex-direction: column; }
+.book-page { flex: 1; padding: 45px 55px; color: #332b26; position: relative; display: flex; flex-direction: column; overflow: hidden; }
 .book-page.right-page { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 100%); }
 .book-title { font-family: var(--app-font-serif); font-size: 42px; font-weight: 500; margin-bottom: 2px; color: #1a1613; letter-spacing: -0.02em; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 16px; margin-top: 10px; }
 .book-author { font-family: var(--app-font-serif); font-size: 16px; font-style: italic; color: #7a6a5e; margin-bottom: 35px; letter-spacing: 0.05em; }

@@ -13,6 +13,18 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    id: 'listen-zenify',
+    name: 'Listen Zenify',
+    monogram: 'LZ',
+    description: 'A full-stack music streaming platform for web and mobile combining AI-powered features, advanced audio processing, and creator-focused tools for an immersive experience.',
+    category: 'Audio / Streaming',
+    technologies: ['Next.js', 'Fastify', 'PostgreSQL', 'Flutter', 'Web Audio API'],
+    features: ['High-performance audio engine', 'Gapless playback', 'Creator Studio analytics', 'Dynamic UI personalization'],
+    github: 'https://github.com/hackerstudent29/Zenify',
+    demo: 'https://listenzenify.vercel.app/',
+    accent: '#a295c2'
+  },
+  {
     id: 'lorin-rag',
     name: 'Lorin AI',
     monogram: 'LO',
@@ -35,18 +47,6 @@ export const projects: Project[] = [
     github: 'https://github.com/hackerstudent29/Event-Management-System-main',
     demo: 'https://zendrumbooking.vercel.app/',
     accent: '#83a891'
-  },
-  {
-    id: 'listen-zenify',
-    name: 'Listen Zenify',
-    monogram: 'LZ',
-    description: 'A full-stack music streaming platform for web and mobile combining AI-powered features, advanced audio processing, and creator-focused tools for an immersive experience.',
-    category: 'Audio / Streaming',
-    technologies: ['Next.js', 'Fastify', 'PostgreSQL', 'Flutter', 'Web Audio API'],
-    features: ['High-performance audio engine', 'Gapless playback', 'Creator Studio analytics', 'Dynamic UI personalization'],
-    github: 'https://github.com/hackerstudent29/Zenify',
-    demo: 'https://listenzenify.vercel.app/',
-    accent: '#a295c2'
   },
   {
     id: 'ram-remix-hub',
