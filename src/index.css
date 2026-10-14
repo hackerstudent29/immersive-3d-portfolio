@@ -553,7 +553,12 @@
   .interactive:hover, .interactive:focus-visible { transform: translateY(-6px) scale(1.025); filter: brightness(1.13); }
 }
 .interactive[data-active="true"] { transform: translateY(-5px); }
-.interactive-label { position: absolute; left: 50%; bottom: calc(100% + 11px); transform: translateX(-50%) translateY(4px); white-space: nowrap; pointer-events: none; opacity: 0; padding: 7px 10px; border: 1px solid rgba(238,215,177,.24); background: rgba(39,24,22,.8); color: #e7ceb0; font: 9px var(--app-font-mono); letter-spacing: .13em; text-transform: uppercase; transition: opacity .3s, transform .3s; }
+.interactive-label { position: absolute; left: 50%; bottom: calc(100% + 11px); transform: translateX(-50%) translateY(4px); white-space: nowrap; pointer-events: none; opacity: 0; padding: 7px 10px; border: 1px solid rgba(238,215,177,.24); background: rgba(39,24,22,.85); backdrop-filter: blur(8px); color: #e7ceb0; font: 9px var(--app-font-mono); letter-spacing: .13em; text-transform: uppercase; transition: opacity .3s, transform .3s; z-index: 25; }
+.interactive[data-active="true"] .interactive-label,
+.interactive:focus-visible .interactive-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 @media (hover: hover) {
   .interactive:hover .interactive-label, .interactive:focus-visible .interactive-label { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
@@ -752,16 +757,19 @@
 .ios-safari-bar { display: none; }
 .ios-page-dots { display: none; }
 
-.coding-panel { position: absolute; right: 32px; bottom: 110px; z-index: 21; width: min(330px, calc(100vw - 64px)); padding: 18px; border: 1px solid rgba(234,202,159,.24); background: rgba(29,25,26,.84); box-shadow: var(--shadow-md); animation: reveal-up .45s both; }
-.coding-header { display: flex; align-items: center; gap: 8px; color: #e3b27a; font: 10px var(--app-font-mono); } .coding-body { margin-top: 15px; color: rgba(230,216,191,.69); font: 10px/1.75 var(--app-font-mono); } .coding-ok { color: #b5c29b; } .cursor { display: inline-block; width: 5px; height: 12px; margin-left: 4px; vertical-align: -2px; background: #dcae76; animation: cursor-blink 1s steps(2) infinite; }
+.coding-panel { position: absolute; right: 32px; bottom: 110px; z-index: 80; width: min(340px, calc(100vw - 40px)); padding: 18px; border: 1px solid rgba(234,202,159,.24); background: rgba(26,20,19,.92); backdrop-filter: blur(16px); border-radius: 8px; box-shadow: var(--shadow-md); animation: reveal-up .35s both; }
+.coding-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #e3b27a; font: 10px var(--app-font-mono); border-bottom: 1px solid rgba(234,202,159,.12); padding-bottom: 10px; }
+.coding-close { background: transparent; border: none; color: rgba(234,202,159,.6); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: color 0.2s, background 0.2s; }
+.coding-close:hover { color: #fff; background: rgba(255,255,255,.1); }
+.coding-body { margin-top: 15px; color: rgba(230,216,191,.75); font: 10px/1.75 var(--app-font-mono); } .coding-ok { color: #b5c29b; } .cursor { display: inline-block; width: 5px; height: 12px; margin-left: 4px; vertical-align: -2px; background: #dcae76; animation: cursor-blink 1s steps(2) infinite; }
 
 @media (max-width: 800px) {
   .topbar { padding: 16px 16px; align-items: flex-start; }
   .brand-sub { display: none; }
-  .mobile-menu { display: flex; }
-  .fallback-nav { display: none; position: absolute; top: 60px; right: 16px; flex-direction: column; align-items: stretch; min-width: 132px; margin-top: 0; }
+  .mobile-menu { display: flex; border-radius: 6px; }
+  .fallback-nav { display: none; position: absolute; top: 62px; right: 16px; flex-direction: column; align-items: stretch; min-width: 150px; margin-top: 0; background: rgba(24, 18, 16, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(238,215,177,.2); border-radius: 10px; padding: 8px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); z-index: 50; }
   .fallback-nav.is-open { display: flex; }
-  .nav-button { padding: 7px 8px; font-size: 8px; }
+  .nav-button { padding: 10px 12px; font-size: 10px; border-radius: 6px; text-align: left; }
   .room-ui { padding: 0 18px 18px; } .hero-copy { font-size: clamp(32px, 10vw, 51px); } .intro-detail { font-size: 10px; }
   .time-control { transform: scale(.9); transform-origin: bottom right; } .status-line { right: 18px; top: 74px; }
   .window, .window-object { left: 4%; top: 14%; width: 39%; height: 31%; min-height: 170px; } .shelf { right: -9%; top: 18%; transform: scale(.8); transform-origin: top right; }
@@ -796,7 +804,7 @@
   }
 
   /* iOS Safari Browser Optimize */
-  .mac-menu-bar, .mac-dock, .mac-browser-titlebar {
+  .mac-menu-bar, .mac-dock, .mac-dock-container, .mac-browser-titlebar {
     display: none !important;
   }
   .mac-desktop {
@@ -804,6 +812,29 @@
   }
   .mac-wallpaper {
     display: none;
+  }
+  .safari-magic-header {
+    height: 44px !important;
+    padding: 0 12px !important;
+  }
+  .safari-magic-dots {
+    width: auto !important;
+    gap: 6px !important;
+  }
+  .safari-magic-nav {
+    display: none !important;
+  }
+  .safari-magic-actions {
+    display: none !important;
+  }
+  .safari-magic-url {
+    height: 28px !important;
+    font-size: 11px !important;
+    padding: 0 8px !important;
+    max-width: none !important;
+  }
+  .book-spread::after {
+    display: none !important;
   }
   .mac-browser-window {
     background: #121212;
@@ -841,23 +872,23 @@
   }
   .content-wrapper {
     grid-template-columns: 1fr !important;
-    padding: 20px !important;
-    gap: 30px !important;
+    padding: 20px 20px 130px 20px !important;
+    gap: 25px !important;
   }
   .project-hero h2 {
-    font-size: 36px;
+    font-size: 32px;
     letter-spacing: -0.04em;
   }
   .project-visual {
     min-height: 180px;
-    margin-top: 20px;
+    margin-top: 18px;
   }
   .panel-rule {
     margin: 20px 0;
   }
   .project-side {
     padding-top: 0;
-    padding-bottom: 40px;
+    padding-bottom: 30px;
   }
   .ios-safari-bar {
     display: flex !important;
@@ -955,23 +986,23 @@
   .shelf { opacity: .86; right: -5%; transform: scale(0.6); transform-origin: top right; } 
   .window, .window-object { width: 50%; left: -5%; top: 8%; } 
   
-  /* Lift the desk and objects up to avoid bottom text overlap */
+  /* Lift the desk and objects up to avoid bottom text overlap, with distributed horizontal positions to avoid overlapping */
   .desk { bottom: 38%; left: 5%; width: 90%; height: 18%; } 
   .monitor { left: 26%; bottom: 48%; width: 50%; height: auto !important; aspect-ratio: 1.4; min-width: 140px; } 
-  .coffee { left: 18%; bottom: 44%; transform: scale(0.7); }
-  .keyboard { left: 34%; bottom: 42%; width: 34%; min-width: 110px; }
-  .notebook { left: 24%; bottom: 43%; transform: scale(0.85); }
-  .headphones { left: 60%; bottom: 43%; transform: scale(0.75); }
-  .phone { left: 74%; bottom: 43%; transform: scale(0.75); }
-  .plant { right: -8%; left: auto; bottom: 44%; transform: scale(0.7); }
-  .lamp { left: 10% !important; right: auto !important; bottom: 55% !important; transform: scale(0.6) !important; transform-origin: bottom left !important; }
+  .coffee { left: 10% !important; bottom: 44% !important; transform: scale(0.7) !important; z-index: 13; }
+  .notebook { left: 22% !important; bottom: 43% !important; transform: scale(0.8) !important; z-index: 13; }
+  .keyboard { left: 36% !important; bottom: 40% !important; width: 32% !important; min-width: 112px !important; z-index: 14 !important; }
+  .headphones { left: 68% !important; bottom: 43% !important; transform: scale(0.75) !important; z-index: 13; }
+  .phone { left: 81% !important; bottom: 43% !important; transform: scale(0.75) !important; z-index: 13; }
+  .plant { right: -4% !important; left: auto !important; bottom: 44% !important; transform: scale(0.7) !important; }
+  .lamp { left: 6% !important; right: auto !important; bottom: 53% !important; transform: scale(0.6) !important; transform-origin: bottom left !important; }
   
   .room-ui { 
     flex-direction: column; 
     align-items: flex-start; 
     gap: 12px; 
-    background: linear-gradient(to top, rgba(20, 15, 12, 0.98) 0%, rgba(20, 15, 12, 0.8) 70%, transparent 100%);
-    padding: 50px 20px 20px 20px;
+    background: linear-gradient(to top, rgba(20, 15, 12, 0.98) 0%, rgba(20, 15, 12, 0.75) 70%, transparent 100%);
+    padding: 40px 18px 18px 18px;
     width: 100%;
     bottom: 0;
   }

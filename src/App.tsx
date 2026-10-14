@@ -20,6 +20,7 @@ import {
   Share,
   SunMedium,
   Sunset,
+  Terminal,
   Volume2,
   X,
   Plus,
@@ -208,14 +209,21 @@ function Home() {
     }
   }, [audioPlaying]);
 
-  const toggleAudio = (e: React.MouseEvent) => {
+  const toggleAudio = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    initAudio();
     if (audioPlaying) {
       audioRef.current?.pause();
+      setAudioPlaying(false);
     } else {
-      audioRef.current?.play().catch(console.error);
+      try {
+        await audioRef.current?.play();
+        setAudioPlaying(true);
+      } catch (err) {
+        console.warn('Audio playback failed', err);
+        setAudioPlaying(false);
+      }
     }
-    setAudioPlaying(!audioPlaying);
   };
   const [robotPos, setRobotPos] = useState<'left' | 'right' | 'center'>('center');
   const [robotHeight, setRobotHeight] = useState(0);
@@ -269,6 +277,7 @@ function Home() {
     }
 
     let active = true;
+    const timeouts: number[] = [];
     const fullLine1 = '$ npm run build';
     const fullLine2 = 'Building workspace...';
     const fullLine4 = "That's basically what I do.";
@@ -281,9 +290,9 @@ function Home() {
         setTypeState(prev => ({ ...prev, line1: fullLine1.slice(0, i + 1) }));
         playTyping();
         i++;
-        setTimeout(typeL1, 60);
+        timeouts.push(window.setTimeout(typeL1, 60));
       } else {
-        setTimeout(typeL2, 200);
+        timeouts.push(window.setTimeout(typeL2, 200));
       }
     };
 
@@ -295,9 +304,9 @@ function Home() {
         setTypeState(prev => ({ ...prev, line2: fullLine2.slice(0, j + 1) }));
         playTyping();
         j++;
-        setTimeout(typeL2, 40);
+        timeouts.push(window.setTimeout(typeL2, 40));
       } else {
-        setTimeout(showL3, 600);
+        timeouts.push(window.setTimeout(showL3, 600));
       }
     };
 
@@ -306,7 +315,7 @@ function Home() {
       if (!active) return;
       setTypeState(prev => ({ ...prev, line3: true }));
       playClick();
-      setTimeout(typeL4, 400);
+      timeouts.push(window.setTimeout(typeL4, 400));
     };
 
     // Typing Line 4
@@ -317,7 +326,7 @@ function Home() {
         setTypeState(prev => ({ ...prev, line4: fullLine4.slice(0, k + 1) }));
         playTyping();
         k++;
-        setTimeout(typeL4, 50);
+        timeouts.push(window.setTimeout(typeL4, 50));
       }
     };
 
@@ -328,6 +337,7 @@ function Home() {
 
     return () => {
       active = false;
+      timeouts.forEach(t => window.clearTimeout(t));
       window.clearTimeout(timer);
     };
   }, [coding, playTyping, playClick]);
@@ -552,7 +562,8 @@ function Home() {
     const handleTouchMove = (e: TouchEvent) => {
       const diffY = Math.abs(startY - e.touches[0].clientY);
       const diffX = Math.abs(startX - e.touches[0].clientX);
-      if (diffY > 10 || diffX > 10) {
+      // Increased threshold to prevent normal mobile taps from being falsely flagged as swipes
+      if (diffY > 25 || diffX > 25) {
         isSwiping.current = true;
       }
     };
@@ -570,10 +581,10 @@ function Home() {
         setActiveRoom(0);
       }
 
-      // Reset swiping flag slowly to absorb immediate tap-clicks on swipe release
+      // Reset swiping flag promptly so taps register reliably
       setTimeout(() => {
         isSwiping.current = false;
-      }, 80);
+      }, 50);
     };
     
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -628,6 +639,10 @@ function Home() {
     if (id === 'chair') { playSwoosh(); setPanel('resume'); return; }
     if (id === 'window') { playSwoosh(); setPanel('environment'); return; }
     if (id === 'keyboard') { 
+      if (coding) {
+        setCoding(false);
+        return;
+      }
       setTypeState({ line1: '', line2: '', line3: false, line4: '' });
       playSwoosh(); 
       setCoding(true); 
@@ -790,19 +805,50 @@ function Home() {
             </div>
             {!desktop && <span className="interactive-label">Projects</span>}
           </button>
-          <button className="interactive keyboard" onClick={() => handleObject('keyboard')} onMouseEnter={() => setActiveObject('keyboard')} onMouseLeave={() => setActiveObject(null)} aria-label="Open coding message" data-testid="button-open-coding">
+          <button 
+            className="interactive keyboard" 
+            data-active={activeObject === 'keyboard' || coding}
+            onClick={() => handleObject('keyboard')} 
+            onMouseEnter={() => setActiveObject('keyboard')} 
+            onMouseLeave={() => setActiveObject(null)} 
+            aria-label="Open coding message" 
+            data-testid="button-open-coding"
+          >
             <div className="keyboard-body">{[0, 1, 2].map((row) => <div className="key-row" key={row}>{Array.from({ length: 11 }, (_, key) => <span className={`key ${key === 5 && row === 2 ? 'wide' : ''}`} key={key} />)}</div>)}</div><span className="interactive-label">Build mode</span>
           </button>
-          <button className="interactive coffee" onClick={() => handleObject('coffee')} onMouseEnter={() => setActiveObject('coffee')} onMouseLeave={() => setActiveObject(null)} aria-label="Open about" data-testid="button-open-about">
+          <button 
+            className="interactive coffee" 
+            data-active={activeObject === 'coffee'}
+            onClick={() => handleObject('coffee')} 
+            onMouseEnter={() => setActiveObject('coffee')} 
+            onMouseLeave={() => setActiveObject(null)} 
+            aria-label="Open about" 
+            data-testid="button-open-about"
+          >
             <div className="cup" /><div className="steam" /><div className="steam two" /><span className="interactive-label">About me</span>
           </button>
-          <button className="interactive lamp" onClick={() => handleObject('lamp')} onMouseEnter={() => setActiveObject('lamp')} onMouseLeave={() => setActiveObject(null)} aria-label="Toggle light" data-testid="button-toggle-light">
+          <button 
+            className="interactive lamp" 
+            data-active={activeObject === 'lamp'}
+            onClick={() => handleObject('lamp')} 
+            onMouseEnter={() => setActiveObject('lamp')} 
+            onMouseLeave={() => setActiveObject(null)} 
+            aria-label="Toggle light" 
+            data-testid="button-toggle-light"
+          >
             <div className="lamp-shade" /><div className="lamp-glow" /><div className="lamp-stem" /><div className="lamp-base" /><span className="interactive-label">{timeModes.find(m => m.id === time)?.label || 'Light'}</span>
           </button>
           <div className="plant room-obj">
             <div className="leaf" /><div className="leaf" /><div className="leaf" /><div className="leaf" /><div className="leaf" /><div className="plant-pot" />
           </div>
-          <button className={`interactive headphones ${audioPlaying ? 'is-playing' : ''}`} onClick={toggleAudio} onMouseEnter={() => setActiveObject('headphones')} onMouseLeave={() => setActiveObject(null)} aria-label="Toggle Audio">
+          <button 
+            className={`interactive headphones ${audioPlaying ? 'is-playing' : ''}`} 
+            data-active={activeObject === 'headphones' || audioPlaying}
+            onClick={toggleAudio} 
+            onMouseEnter={() => setActiveObject('headphones')} 
+            onMouseLeave={() => setActiveObject(null)} 
+            aria-label="Toggle Audio"
+          >
             <div className="headphones-ring" /><div className="ear left" /><div className="ear right" />
             {audioPlaying && <div className="music-notes">♪ ♫ ♪</div>}
             <span className="interactive-label" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -814,7 +860,15 @@ function Home() {
               )}
             </span>
           </button>
-          <div className={`interactive phone ${phoneOpen ? 'is-open' : ''}`} onClick={() => { if (!phoneOpen) { playSwoosh(); setPhoneOpen(true); } }} onMouseEnter={() => !phoneOpen && setActiveObject('phone')} onMouseLeave={() => !phoneOpen && setActiveObject(null)} aria-label="Open contact" data-testid="button-open-contact">
+          <div 
+            className={`interactive phone ${phoneOpen ? 'is-open' : ''}`} 
+            data-active={activeObject === 'phone' || phoneOpen}
+            onClick={() => { if (!phoneOpen) { playSwoosh(); setPhoneOpen(true); } }} 
+            onMouseEnter={() => !phoneOpen && setActiveObject('phone')} 
+            onMouseLeave={() => !phoneOpen && setActiveObject(null)} 
+            aria-label="Open contact" 
+            data-testid="button-open-contact"
+          >
             <div className="phone-body">
               <div className="phone-screen">
                 {phoneOpen && (
@@ -990,8 +1044,39 @@ function Home() {
         </header>
       )}
 
+      {menuOpen && !desktop && (
+        <div 
+          className="menu-backdrop" 
+          onClick={() => setMenuOpen(false)} 
+          style={{ position: 'fixed', inset: 0, zIndex: 45, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)' }}
+        />
+      )}
+
+      {(letterOpen || phoneOpen) && (
+        <div 
+          className="panel-backdrop" 
+          onClick={() => { setLetterOpen(false); setPhoneOpen(false); }} 
+          style={{ zIndex: 90 }}
+        />
+      )}
+
       {!desktop && !panel && !letterOpen && !phoneOpen && <div className="status-line">ROOM 0{activeRoom + 1}</div>}
-      {!desktop && !panel && activeRoom === 0 && !letterOpen && !phoneOpen && <div className="room-ui"><div className="room-intro" style={{ opacity: showIntro ? 1 : 0, pointerEvents: showIntro ? 'auto' : 'none', transition: 'opacity 1s ease-out' }}><div className="eyebrow">A digital workspace, inhabited</div><h1 className="hero-copy">I build digital<br />spaces <em>with a pulse.</em></h1><p className="intro-detail">A developer focused on humane tools, calm interfaces, and useful systems. Move through the room and see what is on the desk.</p><div className="explore-hint"><span className="hint-dot" /> Select an object to begin</div></div><div className="time-control modern-pill" aria-label="Lighting control">{timeModes.map(({ id, label, icon: Icon }) => <button key={id} className={`time-button ${time === id ? 'is-active' : ''}`} onClick={() => setTime(id)} aria-label={`Set ${label}`} data-testid={`button-time-${id}`}><Icon size={16} /><span className="time-label-inline">{label}</span></button>)}</div></div>}
+      {!desktop && !panel && activeRoom === 0 && !letterOpen && !phoneOpen && (
+        <div className="room-ui">
+          <div 
+            className="room-intro" 
+            onClick={() => setShowIntro(false)}
+            style={{ opacity: showIntro ? 1 : 0, pointerEvents: showIntro ? 'auto' : 'none', transition: 'opacity 1s ease-out', cursor: 'pointer' }}
+            title="Tap to dismiss"
+          >
+            <div className="eyebrow">A digital workspace, inhabited</div>
+            <h1 className="hero-copy">I build digital<br />spaces <em>with a pulse.</em></h1>
+            <p className="intro-detail">A developer focused on humane tools, calm interfaces, and useful systems. Move through the room and see what is on the desk.</p>
+            <div className="explore-hint"><span className="hint-dot" /> Select an object to begin</div>
+          </div>
+          <div className="time-control modern-pill" aria-label="Lighting control">{timeModes.map(({ id, label, icon: Icon }) => <button key={id} className={`time-button ${time === id ? 'is-active' : ''}`} onClick={() => setTime(id)} aria-label={`Set ${label}`} data-testid={`button-time-${id}`}><Icon size={16} /><span className="time-label-inline">{label}</span></button>)}</div>
+        </div>
+      )}
 
       {/* Room Scroll Navigation Hint */}
       {!desktop && !panel && !letterOpen && !phoneOpen && (
@@ -1013,8 +1098,19 @@ function Home() {
       )}
 
       {coding && (
-        <div className="coding-panel">
-          <div className="coding-header"><Terminal size={14} /> BUILD / keyboard input</div>
+        <div className="coding-panel" role="dialog" aria-label="Terminal build output">
+          <div className="coding-header">
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Terminal size={14} /> BUILD / keyboard input
+            </span>
+            <button 
+              className="coding-close" 
+              onClick={() => setCoding(false)} 
+              aria-label="Close terminal"
+            >
+              <X size={14} />
+            </button>
+          </div>
           <div className="coding-body">
             {typeState.line1}
             {typeState.line1 && typeState.line1 !== '$ npm run build' && <span className="cursor" />}
@@ -1292,29 +1388,36 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop, showZenify
           className="ios-nav-btn" 
           onClick={(e) => {
             e.stopPropagation();
+            if (showZenifyIframe) {
+              setShowZenifyIframe(false);
+              return;
+            }
             if (!selectedProject) return;
             const idx = projects.findIndex(p => p.id === selectedProject.id);
             if (idx > 0) setSelectedProject(projects[idx - 1]);
           }} 
-          disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0}
+          disabled={(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0) && !showZenifyIframe}
+          aria-label="Previous project"
         >
           <ArrowLeft size={18} />
         </button>
         
         <div className="ios-address-capsule">
           <Lock size={12} className="ios-lock-icon" />
-          <span className="ios-address-text">ram.dev/{selectedProject?.id || ''}</span>
+          <span className="ios-address-text">{showZenifyIframe ? 'listenzenify.vercel.app' : `ram.dev/${selectedProject?.id || ''}`}</span>
         </div>
 
         <button 
           className="ios-nav-btn" 
           onClick={(e) => {
             e.stopPropagation();
+            if (showZenifyIframe) return;
             if (!selectedProject) return;
             const idx = projects.findIndex(p => p.id === selectedProject.id);
             if (idx < projects.length - 1) setSelectedProject(projects[idx + 1]);
           }} 
-          disabled={!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1}
+          disabled={showZenifyIframe || (!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1)}
+          aria-label="Next project"
         >
           <ArrowRight size={18} />
         </button>
