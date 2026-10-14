@@ -211,12 +211,19 @@
 .rack-right .blade-bubble::before { content: ""; position: absolute; right: -6px; left: auto; top: 50%; transform: translateY(-50%); border-width: 5px 0 5px 6px; border-style: solid; border-color: transparent transparent transparent #333; }
 
 @media (max-width: 768px) {
-  .rack-left .blade-bubble, .rack-right .blade-bubble {
-    left: 50%; right: auto; bottom: calc(100% + 10px); top: auto; transform: translateX(-50%) translateZ(40px);
+  .rack-left .blade-bubble {
+    left: calc(100% + 6px);
+    right: auto;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%) translateZ(30px);
   }
-  .rack-left .blade-bubble::before, .rack-right .blade-bubble::before {
-    top: auto; bottom: -6px; left: 50%; right: auto; transform: translateX(-50%);
-    border-width: 6px 5px 0 5px; border-style: solid; border-color: #333 transparent transparent transparent;
+  .rack-right .blade-bubble {
+    right: calc(100% + 6px);
+    left: auto;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%) translateZ(30px);
   }
 }
 
@@ -252,19 +259,182 @@
 @keyframes fixing-progress { 0% { width: 0%; } 100% { width: 100%; box-shadow: 0 0 5px #00ffcc; } }
 
 /* Ground Robot with Hydraulic Lift */
-.ground-robot { position: absolute; bottom: 20%; width: 60px; height: 350px; transform: translateZ(90px); transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: auto; cursor: pointer; }
-.ground-robot { --lift-height: calc((4 - var(--lift, 4)) * 76px + 30px); }
-.ground-robot.pos-left { left: 19%; transform: translateZ(90px); }
-.ground-robot.pos-center { left: 48%; transform: translateZ(90px); }
-.ground-robot.pos-right { left: 78%; transform: translateZ(90px); }
-.ground-robot.pos-right .robot-chassis, .ground-robot.pos-right .robot-head { transform: scaleX(-1); }
+.ground-robot {
+  position: absolute;
+  bottom: 20%;
+  width: 60px;
+  height: 380px;
+  --target-y: calc(43px + (4 - var(--lift, 4)) * 73.6px);
+  --lift-height: calc(var(--target-y) - 35px);
+  transform: translateZ(40px);
+  transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.ground-robot.pos-left {
+  left: calc(10% + 184px);
+  right: auto;
+  transform: translateZ(40px);
+}
+.ground-robot.pos-center {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%) translateZ(40px);
+}
+.ground-robot.pos-right {
+  left: auto;
+  right: calc(10% + 184px);
+  transform: translateZ(40px);
+}
+.ground-robot.pos-right .robot-chassis,
+.ground-robot.pos-right .robot-head {
+  transform: scaleX(-1);
+}
+
+/* Server Blade Badges & Status */
+.server-blade-tag {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 5;
+}
+.blade-id-badge {
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: #00ffcc;
+  background: rgba(0, 255, 204, 0.1);
+  padding: 1px 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 255, 204, 0.3);
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+.server-blade.is-error .blade-id-badge {
+  color: #ff0055;
+  background: rgba(255, 0, 85, 0.15);
+  border-color: #ff0055;
+  animation: blink-fast 0.5s infinite;
+}
+.blade-status-indicator {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00ffcc;
+  box-shadow: 0 0 5px #00ffcc;
+}
+.server-blade.is-error .blade-status-indicator {
+  background: #ff0055;
+  box-shadow: 0 0 8px #ff0055;
+  animation: error-flash 0.4s infinite;
+}
+
+/* Target Reticle for Active Fixing Blade */
+.blade-target-reticle {
+  position: absolute;
+  inset: -2px;
+  border: 2px dashed #ff0055;
+  border-radius: 4px;
+  background: rgba(255, 0, 85, 0.12);
+  box-shadow: 0 0 14px rgba(255, 0, 85, 0.6), inset 0 0 10px rgba(255, 0, 85, 0.3);
+  pointer-events: none;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  animation: reticle-pulse 0.4s infinite alternate;
+}
+.rack-right .blade-target-reticle {
+  justify-content: flex-start;
+  padding-left: 10px;
+  padding-right: 0;
+}
+.target-reticle-text {
+  font-family: var(--app-font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background: #ff0055;
+  padding: 1px 5px;
+  border-radius: 2px;
+  box-shadow: 0 0 8px #ff0055;
+  animation: blink 0.3s infinite alternate;
+}
+@keyframes reticle-pulse {
+  0% { border-color: #ff0055; box-shadow: 0 0 6px rgba(255, 0, 85, 0.4); }
+  100% { border-color: #00ffcc; box-shadow: 0 0 18px rgba(0, 255, 204, 0.7); }
+}
 
 /* Robot UI Elements */
-.robot-speech-bubble { position: absolute; bottom: calc(var(--lift-height) + 65px); left: 50%; transform: translateX(-50%); background: #fdf6e3; color: #2d3748; padding: 10px 14px; border-radius: 8px; font: bold 14px/1.4 var(--app-font-mono); box-shadow: 0 4px 10px rgba(0,0,0,0.5); pointer-events: none; z-index: 30; white-space: normal; width: max-content; max-width: 260px; text-align: center; border: 2px solid #e2ae72; }
-.robot-speech-bubble::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 5px; border-style: solid; border-color: #fdf6e3 transparent transparent transparent; }
+.robot-speech-bubble {
+  position: absolute;
+  bottom: calc(var(--target-y) + 34px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fdf6e3;
+  color: #2d3748;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: bold 12px/1.35 var(--app-font-mono);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 30;
+  white-space: normal;
+  width: max-content;
+  max-width: 240px;
+  text-align: center;
+  border: 2px solid #e2ae72;
+  transition: bottom 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.robot-speech-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #fdf6e3 transparent transparent transparent;
+}
 
-.robot-info-panel { position: absolute; bottom: calc(var(--lift-height) + 5px); left: 70px; background: rgba(18, 25, 30, 0.9); border: 1px solid #00ffcc; padding: 12px; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,255,204,0.1); color: #00ffcc; font-family: var(--app-font-mono); width: 220px; z-index: 40; pointer-events: auto; animation: reveal-up 0.3s ease-out; }
-.robot-info-panel::before { content: ""; position: absolute; right: 100%; bottom: 20px; border-width: 6px; border-style: solid; border-color: transparent #00ffcc transparent transparent; }
+.robot-info-panel {
+  position: absolute;
+  bottom: calc(var(--target-y) + 5px);
+  left: 70px;
+  background: rgba(18, 25, 30, 0.9);
+  border: 1px solid #00ffcc;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,255,204,0.1);
+  color: #00ffcc;
+  font-family: var(--app-font-mono);
+  width: 220px;
+  z-index: 40;
+  pointer-events: auto;
+  animation: reveal-up 0.3s ease-out;
+  transition: bottom 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.robot-info-panel::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  bottom: 20px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent #00ffcc transparent transparent;
+}
 .robot-info-header { font-size: 14px; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 4px; }
 .robot-info-sub { font-size: 9px; color: #a0aec0; margin-bottom: 8px; line-height: 1.4; }
 .robot-info-status { font-size: 10px; color: #f2ba72; }
@@ -308,20 +478,31 @@
 .ground-robot.pos-right.state-moving .robot-wheel { animation-direction: reverse; }
 @keyframes roll-wheel { 100% { transform: rotate(-360deg); } }
 
-.hydraulic-lift { position: absolute; bottom: 20px; width: 12px; background: repeating-linear-gradient(0deg, #718096, #718096 4px, #4a5568 4px, #4a5568 8px); border: 2px solid #1a202c; height: var(--lift-height); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
+.hydraulic-lift { position: absolute; bottom: 20px; width: 12px; background: repeating-linear-gradient(0deg, #718096, #718096 4px, #4a5568 4px, #4a5568 8px); border: 2px solid #1a202c; height: max(12px, var(--lift-height)); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
 
-.robot-head { position: absolute; bottom: calc(var(--lift-height) + 15px); width: 44px; height: 34px; background: #2d3748; border: 2px solid #718096; border-radius: 8px 12px 8px 8px; transition: bottom 1s cubic-bezier(0.4, 0, 0.2, 1); z-index: 3; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+.robot-head { position: absolute; bottom: calc(var(--target-y) - 15px); width: 44px; height: 34px; background: #2d3748; border: 2px solid #718096; border-radius: 8px 12px 8px 8px; transition: bottom 1s cubic-bezier(0.4, 0, 0.2, 1); z-index: 3; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
 .robot-visor { position: absolute; top: 6px; left: 4px; width: 28px; height: 12px; background: #000; border-radius: 4px; border: 1px solid #1a202c; overflow: hidden; }
 .robot-visor::after { content: ""; position: absolute; left: 2px; top: 2px; width: 10px; height: 8px; background: #00ffcc; box-shadow: 0 0 8px #00ffcc; animation: visor-scan 1s infinite alternate; }
 @keyframes visor-scan { 100% { transform: translateX(14px); } }
 
-.robot-arm { position: absolute; top: 16px; left: -35px; width: 40px; height: 6px; background: #718096; transform-origin: right center; opacity: 0; transition: opacity 0.3s; border-radius: 3px; }
+.robot-arm { position: absolute; top: 16px; left: -32px; width: 36px; height: 6px; background: #718096; transform-origin: right center; opacity: 0; transition: opacity 0.3s; border-radius: 3px; }
 .robot-claw { position: absolute; left: -8px; top: -4px; width: 12px; height: 14px; border: 3px solid #00ffcc; border-right: none; border-radius: 4px 0 0 4px; }
+
+/* Repair Beam & Spark Emitter */
+.robot-repair-beam { position: absolute; left: -24px; top: 50%; width: 26px; height: 3px; background: linear-gradient(90deg, #00ffcc, #ff0055); box-shadow: 0 0 8px #00ffcc, 0 0 12px #ff0055; transform: translateY(-50%); opacity: 0; pointer-events: none; }
+.ground-robot.state-fixing .robot-repair-beam { opacity: 1; animation: repair-beam-pulse 0.15s infinite alternate; }
+@keyframes repair-beam-pulse { 0% { transform: translateY(-50%) scaleY(0.7) scaleX(0.9); opacity: 0.8; } 100% { transform: translateY(-50%) scaleY(1.4) scaleX(1.15); opacity: 1; } }
+
+.robot-spark-emitter { position: absolute; left: -26px; top: 50%; width: 8px; height: 8px; transform: translateY(-50%); pointer-events: none; opacity: 0; }
+.ground-robot.state-fixing .robot-spark-emitter { opacity: 1; }
+.robot-spark-emitter::before, .robot-spark-emitter::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 8px #00ffcc, 0 0 12px #ff0055; }
+.robot-spark-emitter::before { animation: spark-burst-1 0.2s infinite ease-out; }
+.robot-spark-emitter::after { animation: spark-burst-2 0.3s infinite ease-out; }
+@keyframes spark-burst-1 { 0% { transform: translate(0, 0) scale(0.6); opacity: 1; } 100% { transform: translate(-10px, -8px) scale(0); opacity: 0; } }
+@keyframes spark-burst-2 { 0% { transform: translate(0, 0) scale(0.8); opacity: 1; } 100% { transform: translate(-8px, 10px) scale(0); opacity: 0; } }
+
 .ground-robot.state-fixing .robot-arm { opacity: 1; animation: heavy-wiring 0.5s infinite alternate; }
-@keyframes heavy-wiring { 0% { transform: rotate(-5deg) scaleX(1); } 100% { transform: rotate(5deg) scaleX(1.1); } }
-@keyframes spark-fly-1 { 0% { transform: translate(0, 0) scale(0); opacity: 0; } 20% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-15px, -20px) scale(0); opacity: 0; } }
-@keyframes spark-fly-2 { 0% { transform: translate(0, 0) scale(0); opacity: 0; } 20% { transform: translate(0, 0) scale(1.5); opacity: 1; } 100% { transform: translate(20px, -15px) scale(0); opacity: 0; } }
-@keyframes spark-fly-3 { 0% { transform: translate(0, 0) scale(0); opacity: 0; } 20% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(10px, 20px) scale(0); opacity: 0; } }
+@keyframes heavy-wiring { 0% { transform: rotate(-5deg) scaleX(1); } 100% { transform: rotate(5deg) scaleX(1.08); } }
 
 
 .room-back { position: absolute; inset: 0 0 26%; background: linear-gradient(180deg, var(--sky-deep) 0%, var(--sky) 42%, #90715d 100%); filter: saturate(.82); }
@@ -983,61 +1164,133 @@
   .server-room-back {
     inset: 0 0 20%;
   }
+  .tv-screen-container {
+    top: 20% !important;
+    transform: translate(-50%, 0) !important;
+    z-index: 6 !important;
+  }
+  .main-server-screen {
+    width: min(250px, 72vw) !important;
+    height: 110px !important;
+  }
+  .neon-logo {
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
+  }
+  .screen-header {
+    padding: 4px 10px !important;
+    font-size: 9px !important;
+  }
+  .screen-content {
+    padding: 6px 10px !important;
+    font-size: 9px !important;
+    gap: 4px !important;
+  }
   .server-rack {
-    width: 100px !important;
-    height: 280px !important;
-    bottom: 15% !important;
+    width: 90px !important;
+    height: 260px !important;
+    bottom: 12% !important;
     gap: 6px !important;
     padding: 6px !important;
   }
   .rack-left {
-    left: 2% !important;
-    transform: rotateY(10deg) translateZ(20px) !important;
+    left: 3% !important;
+    transform: rotateY(10deg) translateZ(25px) !important;
   }
   .rack-right {
-    right: 2% !important;
-    transform: rotateY(-10deg) translateZ(20px) !important;
-  }
-  .main-server-screen {
-    width: 240px !important;
-    height: 140px !important;
-  }
-  .neon-logo {
-    font-size: 16px !important;
-    margin-bottom: 4px !important;
-  }
-  .screen-content {
-    padding: 10px !important;
-    font-size: 10px !important;
-    gap: 6px !important;
-  }
-  .tv-screen-container {
-    top: 48% !important;
+    right: 3% !important;
+    transform: rotateY(-10deg) translateZ(25px) !important;
   }
   .ground-robot {
     width: 44px !important;
-    height: 240px !important;
-    bottom: 15% !important;
+    height: 260px !important;
+    bottom: 12% !important;
+    --target-y: calc(28.4px + (4 - var(--lift, 4)) * 50.8px) !important;
+    --lift-height: calc(var(--target-y) - 28px) !important;
   }
-  .ground-robot.pos-left { left: 24% !important; }
-  .ground-robot.pos-center { left: 46% !important; }
-  .ground-robot.pos-right { left: 68% !important; }
+  .ground-robot.pos-left {
+    left: calc(3% + 94px) !important;
+    right: auto !important;
+    transform: translateZ(25px) !important;
+  }
+  .ground-robot.pos-center {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) translateZ(25px) !important;
+  }
+  .ground-robot.pos-right {
+    left: auto !important;
+    right: calc(3% + 94px) !important;
+    transform: translateZ(25px) !important;
+  }
+  .ground-robot .robot-chassis {
+    width: 44px !important;
+    height: 20px !important;
+  }
+  .ground-robot .hydraulic-lift {
+    bottom: 16px !important;
+    width: 10px !important;
+    height: max(8px, var(--lift-height)) !important;
+  }
+  .ground-robot .robot-head {
+    bottom: calc(var(--target-y) - 15px) !important;
+    width: 38px !important;
+    height: 30px !important;
+  }
+  .ground-robot .robot-arm {
+    top: 13px !important;
+    left: -28px !important;
+    width: 30px !important;
+  }
   .robot-speech-bubble {
     font-size: 10px !important;
+    line-height: 1.3 !important;
     padding: 6px 10px !important;
-    max-width: 160px !important;
-    bottom: calc(var(--lift-height) + 50px) !important;
+    max-width: 170px !important;
+    bottom: calc(var(--target-y) + 26px) !important;
+  }
+  .robot-info-panel {
+    width: 180px !important;
+    padding: 8px 10px !important;
+    font-size: 9px !important;
+    bottom: calc(var(--target-y) + 10px) !important;
+  }
+  .ground-robot.pos-left .robot-info-panel {
+    left: 45px !important;
+    right: auto !important;
+  }
+  .ground-robot.pos-right .robot-info-panel {
+    right: 45px !important;
+    left: auto !important;
+  }
+  .ground-robot.pos-center .robot-info-panel {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+  .blade-id-badge {
+    font-size: 7px !important;
+    padding: 0 2px !important;
+  }
+  .target-reticle-text {
+    font-size: 7px !important;
+    padding: 0 3px !important;
   }
   .blade-bubble {
-    max-width: 90px !important;
+    max-width: 85px !important;
     font-size: 8px !important;
-    padding: 4px 8px !important;
+    padding: 3px 6px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) translateZ(30px) !important;
   }
   .rack-left .blade-bubble {
-    left: calc(100% + 5px) !important;
+    left: calc(100% + 4px) !important;
+    right: auto !important;
   }
   .rack-right .blade-bubble {
-    right: calc(100% + 5px) !important;
+    right: calc(100% + 4px) !important;
+    left: auto !important;
   }
   .server-floor {
     bottom: -22% !important;

@@ -925,6 +925,10 @@ function Home() {
                   const id = `l-${i}`;
                   return (
                     <div key={id} className={`server-blade ${errorServer === id ? 'is-error' : ''} ${errorServer === id && robotState === 'fixing' ? 'is-fixing' : ''}`}>
+                      <div className="server-blade-tag">
+                        <span className="blade-id-badge">{id.toUpperCase()}</span>
+                        <span className="blade-status-indicator" />
+                      </div>
                       <div className={`server-internals type-${errorType}`}>
                         {errorType === 'hardware' && (
                           <>
@@ -947,6 +951,11 @@ function Home() {
                           </>
                         )}
                       </div>
+                      {errorServer === id && robotState === 'fixing' && (
+                        <div className="blade-target-reticle">
+                          <span className="target-reticle-text">TARGETING</span>
+                        </div>
+                      )}
                       {errorServer === id && <div className="blade-bubble error-bubble"><span className="error-text">! {errorMsg} !</span></div>}
                       {fixedServer?.id === id && <div className="blade-bubble success-bubble"><span className="success-text">{fixedServer.msg}</span></div>}
                     </div>
@@ -959,6 +968,10 @@ function Home() {
                   const id = `r-${i}`;
                   return (
                     <div key={id} className={`server-blade ${errorServer === id ? 'is-error' : ''} ${errorServer === id && robotState === 'fixing' ? 'is-fixing' : ''}`}>
+                      <div className="server-blade-tag">
+                        <span className="blade-id-badge">{id.toUpperCase()}</span>
+                        <span className="blade-status-indicator" />
+                      </div>
                       <div className={`server-internals type-${errorType}`}>
                         {errorType === 'hardware' && (
                           <>
@@ -981,6 +994,11 @@ function Home() {
                           </>
                         )}
                       </div>
+                      {errorServer === id && robotState === 'fixing' && (
+                        <div className="blade-target-reticle">
+                          <span className="target-reticle-text">TARGETING</span>
+                        </div>
+                      )}
                       {errorServer === id && <div className="blade-bubble error-bubble"><span className="error-text">! {errorMsg} !</span></div>}
                       {fixedServer?.id === id && <div className="blade-bubble success-bubble"><span className="success-text">{fixedServer.msg}</span></div>}
                     </div>
@@ -1004,7 +1022,11 @@ function Home() {
                 <div className="hydraulic-lift" />
                 <div className="robot-head">
                   <div className="robot-visor" />
-                  <div className="robot-arm"><div className="robot-claw" /></div>
+                  <div className="robot-arm">
+                    <div className="robot-claw" />
+                    <div className="robot-repair-beam" />
+                    <div className="robot-spark-emitter" />
+                  </div>
                 </div>
               </div>
               
