@@ -260,6 +260,17 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onTouchMove={(e) => {
+        if (e.touches.length > 0 && dockRef.current) {
+          const touch = e.touches[0];
+          const rect = dockRef.current.getBoundingClientRect();
+          const p = Math.max(8, baseIconSize * 0.12);
+          setMouseX(touch.clientX - rect.left - p);
+        }
+      }}
+      onTouchEnd={() => {
+        setMouseX(null);
+      }}
     >
       <div 
         className="relative"

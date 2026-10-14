@@ -778,17 +778,17 @@ function Home() {
             <span className="interactive-label">Music</span>
             {audioPlaying && <div className="music-notes">♪ ♫ ♪</div>}
           </div>
-          <div className={`notebook ${letterOpen ? 'is-open' : ''}`} onClick={() => { if (!letterOpen) { playSwoosh(); setLetterOpen(true); } }} onMouseEnter={() => !letterOpen && setActiveObject('notebook')} onMouseLeave={() => !letterOpen && setActiveObject(null)} aria-label="Open letter">
+          <button 
+            className="interactive notebook" 
+            data-active={activeObject === 'notebook' || letterOpen}
+            onClick={() => { playSwoosh(); setLetterOpen(true); }} 
+            onMouseEnter={() => setActiveObject('notebook')} 
+            onMouseLeave={() => setActiveObject(null)} 
+            aria-label="Open letter"
+            data-testid="button-open-letter"
+          >
             <span className="interactive-label">Letter</span>
-            <div className="notebook-content">
-              <p className="letter-date">August 12, 2026</p>
-              <p className="letter-greeting">Hey there,</p>
-              <p className="letter-body">Thanks for visiting my workspace.</p>
-              <p className="letter-body">I'm Ram, a Java backend developer who loves building robust systems and exploring how things work under the hood. Feel free to look around.</p>
-              <p className="letter-signoff">Cheers,<br/>Ram</p>
-              <button className="panel-close notebook-close" onClick={(e) => { e.stopPropagation(); setLetterOpen(false); }} aria-label="Close letter"><X size={17} /></button>
-            </div>
-          </div>
+          </button>
           <button className={`interactive monitor ${activeObject === 'computer' || desktop ? 'is-active' : ''} ${desktop ? 'is-zoomed' : ''}`} onClick={(e) => { if (!desktop) handleObject('computer'); }} onMouseEnter={() => !desktop && setActiveObject('computer')} onMouseLeave={() => !desktop && setActiveObject(null)} aria-label="Open projects" data-testid="button-open-projects" style={desktop ? { cursor: 'default' } : {}}>
             <div className="monitor-neck" /><div className="monitor-base" />
             <div className="monitor-frame">
@@ -860,33 +860,20 @@ function Home() {
               )}
             </span>
           </button>
-          <div 
-            className={`interactive phone ${phoneOpen ? 'is-open' : ''}`} 
+          <button 
+            className="interactive phone" 
             data-active={activeObject === 'phone' || phoneOpen}
-            onClick={() => { if (!phoneOpen) { playSwoosh(); setPhoneOpen(true); } }} 
-            onMouseEnter={() => !phoneOpen && setActiveObject('phone')} 
-            onMouseLeave={() => !phoneOpen && setActiveObject(null)} 
+            onClick={() => { playSwoosh(); setPhoneOpen(true); }} 
+            onMouseEnter={() => setActiveObject('phone')} 
+            onMouseLeave={() => setActiveObject(null)} 
             aria-label="Open contact" 
             data-testid="button-open-contact"
           >
             <div className="phone-body">
-              <div className="phone-screen">
-                {phoneOpen && (
-                  <div className="phone-content">
-                    <h2 className="phone-title">Connect</h2>
-                    <div className="phone-links">
-                      <a href="mailto:ramanathanb86@gmail.com"><Mail size={16} /> ramanathanb86@gmail.com</a>
-                      <a href="tel:+919514154110"><Phone size={16} /> +91 9514154110</a>
-                      <a href="https://github.com/hackerstudent29" target="_blank" rel="noreferrer"><Github size={16} /> GitHub</a>
-                      <a href="https://linkedin.com/in/ramanathan-s-it" target="_blank" rel="noreferrer"><Linkedin size={16} /> LinkedIn</a>
-                    </div>
-                    <button className="panel-close phone-close" onClick={(e) => { e.stopPropagation(); setPhoneOpen(false); }} aria-label="Close phone"><X size={17} /></button>
-                  </div>
-                )}
-              </div>
+              <div className="phone-screen" />
             </div>
-            {!phoneOpen && <span className="interactive-label">Contact</span>}
-          </div>
+            <span className="interactive-label">Contact</span>
+          </button>
           <div className="room-light-wash" />
             </div>
           </section>
@@ -1052,13 +1039,7 @@ function Home() {
         />
       )}
 
-      {(letterOpen || phoneOpen) && (
-        <div 
-          className="panel-backdrop" 
-          onClick={() => { setLetterOpen(false); setPhoneOpen(false); }} 
-          style={{ zIndex: 90 }}
-        />
-      )}
+
 
       {!desktop && !panel && !letterOpen && !phoneOpen && <div className="status-line">ROOM 0{activeRoom + 1}</div>}
       {!desktop && !panel && activeRoom === 0 && !letterOpen && !phoneOpen && (
@@ -1150,6 +1131,66 @@ function Home() {
           </div>
         </div>
       )}
+
+      {/* 2D Letter Fullscreen Overlay - Always Top Layer */}
+      {letterOpen && (
+        <div 
+          className="letter-overlay" 
+          onClick={() => setLetterOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Personal Letter from Ram"
+        >
+          <div className="letter-paper" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="letter-close-btn" 
+              onClick={() => setLetterOpen(false)} 
+              aria-label="Close letter"
+            >
+              <X size={18} />
+            </button>
+            <p className="letter-date">August 12, 2026</p>
+            <p className="letter-greeting">Hey there,</p>
+            <p className="letter-body">Thanks for visiting my workspace.</p>
+            <p className="letter-body">I'm Ram, a Java backend developer who loves building robust systems and exploring how things work under the hood. Feel free to look around.</p>
+            <p className="letter-signoff">Cheers,<br/>Ram</p>
+          </div>
+        </div>
+      )}
+
+      {/* 2D Phone Contact Fullscreen Overlay - Perfectly Centered Within Viewport */}
+      {phoneOpen && (
+        <div 
+          className="phone-overlay" 
+          onClick={() => setPhoneOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Contact Information"
+        >
+          <div className="phone-modal-frame" onClick={(e) => e.stopPropagation()}>
+            <div className="phone-modal-body">
+              <div className="phone-modal-screen">
+                <div className="phone-content">
+                  <h2 className="phone-title">Connect</h2>
+                  <div className="phone-links">
+                    <a href="mailto:ramanathanb86@gmail.com"><Mail size={16} /> ramanathanb86@gmail.com</a>
+                    <a href="tel:+919514154110"><Phone size={16} /> +91 9514154110</a>
+                    <a href="https://github.com/hackerstudent29" target="_blank" rel="noreferrer"><Github size={16} /> GitHub</a>
+                    <a href="https://linkedin.com/in/ramanathan-s-it" target="_blank" rel="noreferrer"><Linkedin size={16} /> LinkedIn</a>
+                  </div>
+                  <button 
+                    className="phone-modal-close" 
+                    onClick={() => setPhoneOpen(false)} 
+                    aria-label="Close phone"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -1167,9 +1208,16 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop, showZenify
   const handleAppClick = (appId: string) => {
     if (appId === 'zenify') {
       setShowZenifyIframe(true);
-    }
-    if (appId === 'safari') {
+    } else if (appId === 'safari') {
       setShowZenifyIframe(false);
+    } else if (appId === 'games') {
+      setShowZenifyIframe(false);
+      const gameProj = projects.find(p => p.id === 'ram-remix-hub') || projects[0];
+      if (gameProj) setSelectedProject(gameProj);
+    } else if (appId === 'things') {
+      setShowZenifyIframe(false);
+      const noteProj = projects.find(p => p.id === 'lorin-rag') || projects[1];
+      if (noteProj) setSelectedProject(noteProj);
     }
     setOpenApps(prev => 
       prev.includes(appId) 
@@ -1301,6 +1349,13 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop, showZenify
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>
             </div>
+            <button 
+              className="safari-done-btn" 
+              onClick={(e) => { e.stopPropagation(); closeDesktop(); }} 
+              aria-label="Close desktop"
+            >
+              Done
+            </button>
           </div>
           <div className="safari-magic-content">
             {showZenifyIframe ? (
@@ -1377,72 +1432,8 @@ function Desktop({ selectedProject, setSelectedProject, closeDesktop, showZenify
         </div>
       </div>
 
-      {/* iOS Safari Style Bottom Bar (Only visible on mobile) */}
-      <div 
-        className="ios-safari-bar" 
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
-      >
-        <button 
-          className="ios-nav-btn" 
-          onClick={(e) => {
-            e.stopPropagation();
-            if (showZenifyIframe) {
-              setShowZenifyIframe(false);
-              return;
-            }
-            if (!selectedProject) return;
-            const idx = projects.findIndex(p => p.id === selectedProject.id);
-            if (idx > 0) setSelectedProject(projects[idx - 1]);
-          }} 
-          disabled={(!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === 0) && !showZenifyIframe}
-          aria-label="Previous project"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        
-        <div className="ios-address-capsule">
-          <Lock size={12} className="ios-lock-icon" />
-          <span className="ios-address-text">{showZenifyIframe ? 'listenzenify.vercel.app' : `ram.dev/${selectedProject?.id || ''}`}</span>
-        </div>
-
-        <button 
-          className="ios-nav-btn" 
-          onClick={(e) => {
-            e.stopPropagation();
-            if (showZenifyIframe) return;
-            if (!selectedProject) return;
-            const idx = projects.findIndex(p => p.id === selectedProject.id);
-            if (idx < projects.length - 1) setSelectedProject(projects[idx + 1]);
-          }} 
-          disabled={showZenifyIframe || (!selectedProject || projects.findIndex(p => p.id === selectedProject.id) === projects.length - 1)}
-          aria-label="Next project"
-        >
-          <ArrowRight size={18} />
-        </button>
-
-        <button className="ios-done-btn" onClick={(e) => { e.stopPropagation(); closeDesktop(); }}>
-          Done
-        </button>
-      </div>
-
-      <div className="ios-page-dots" 
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
-      >
-        {projects.map((p) => (
-          <span 
-            key={p.id} 
-            className={`ios-dot ${selectedProject?.id === p.id ? 'is-active' : ''}`} 
-            onClick={(e) => { e.stopPropagation(); setSelectedProject(p); }} 
-          />
-        ))}
-      </div>
-
-      <div className="mac-dock-container" style={{ position: 'absolute', bottom: '20px', left: '0', right: '0', display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'auto' }}>
+      <div className="mac-dock-container">
+        <div>
           <MacOSDock apps={dockApps} onAppClick={handleAppClick} openApps={openApps} />
         </div>
       </div>
